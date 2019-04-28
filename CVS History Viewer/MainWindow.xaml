@@ -1,0 +1,223 @@
+﻿<Window x:Class="CVS_History_Viewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CVS_History_Viewer"
+        mc:Ignorable="d"
+        Title="CVS History Viewer" Name="MWindow" Height="800" Width="1280" Loaded="Window_Loaded" Style="{StaticResource CustomChrome}" WindowStartupLocation="CenterScreen" Icon="Resources/Images/icon.ico">
+    <Grid SnapsToDevicePixels="True">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition Height="40"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <!--Header Grid-->
+        <Grid Grid.Row="0" Background="#c5013c">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Name="uiMinimize" Content="&#xf2d1;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Minimize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20" Style="{StaticResource Button}"/>
+                <Button Name="uiMaximize" Content="&#xf2d0;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Maximize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource Button}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding WindowState, ElementName=MWindow}" Value="Maximized">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Name="uiNormalize" Content="&#xf2d2;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Normalize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource Button}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding WindowState, ElementName=MWindow}" Value="Maximized">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Name="uiClose" Content="&#xf410;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Close_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20" Style="{StaticResource Button}"/>
+            </StackPanel>
+        </Grid>
+        
+        <Grid Grid.Row="1">
+            <StackPanel Orientation="Horizontal" Margin="10,0,10,0">
+                <Button Name="uiChooseDirectory" Content="Choose Directory" Click="ChooseDirectory_Click" Height="25" Padding="10,0,10,0" Style="{StaticResource Button}"/>
+                <Button Name="uiRefresh" Content="Refresh" Click="Refresh_Click" Height="25" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
+                <Button Name="uiShowAbout" Content="?" Click="ShowAbout_Click"  Height="25" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
+            </StackPanel>
+        </Grid>
+
+        <!--Main Grid-->
+        <Grid Grid.Row="2">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"/>
+                <RowDefinition/>
+                <RowDefinition Height="1"/>
+                <RowDefinition Height="320"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <DockPanel Margin="10,5,10,5">
+                    <Button Name="uiSearch" Content="&#xf002;" FontFamily="{StaticResource FontAwesomeSolid}" Click="Search_Click" DockPanel.Dock="Right" Width="{Binding Path=ActualHeight, RelativeSource={RelativeSource Self}}" VerticalAlignment="Stretch" Style="{StaticResource Button}"/>
+                    <TextBox Name="uiSearchText" VerticalContentAlignment="Center" KeyUp="SearchText_KeyUp"/>
+                </DockPanel>
+            </Grid>            
+            
+            <Grid Grid.Row="1">
+                <DataGrid Name="uiCommits" AutoGenerateColumns="False" RowHeaderWidth="0" SelectionMode="Single" IsReadOnly="True" HorizontalScrollBarVisibility="Hidden" SelectionChanged="Commits_SelectionChanged">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Description" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding sDescriptionTable}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Date" Width="SizeToCells" MinWidth="70">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding dDate, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Author" Width="SizeToCells" MinWidth="70">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding sAuthor}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Commit" Width="SizeToCells" MinWidth="70">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding sShortHASH}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+
+            <GridSplitter Grid.Row="2" Height="1" HorizontalAlignment="Stretch"/>
+
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="1"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition Height="1"/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer  Grid.Row="0" Padding="5" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Text="Commit:" FontWeight="Bold" Margin="0,0,5,0"/>
+                                <TextBlock Name="uiCommitHASH"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Author:" FontWeight="Bold" Margin="0,0,5,0"/>
+                                <TextBlock Name="uiCommitAuthor"/>
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Date:" FontWeight="Bold" Margin="0,0,5,0"/>
+                                <TextBlock Name="uiCommitDate"/>
+                            </DockPanel>
+                            <TextBox  Name="uiCommitDescription" Background="Transparent" Margin="0,5,0,0" BorderThickness="0"
+                                 Text="{Binding Text, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ScrollViewer>                    
+
+                    <GridSplitter Grid.Row="1" Height="1" HorizontalAlignment="Stretch" Background="Black"/>
+
+                    <ListBox Name="uiCommitRevisions" Grid.Row="2" MouseDoubleClick="CommitRevisions_MouseDoubleClick" SelectionChanged="CommitRevisions_SelectionChanged"/>
+
+                </Grid>
+
+                <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Stretch" Background="Black"/>
+
+                <Grid Grid.Column="2">
+                    <ScrollViewer Name="uiDiffContainer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Name="uiDiffView"/>
+                    </ScrollViewer>
+                    <Label Name="uiDiffLoading" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" 
+                           VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="25">
+                        Diff View Loading...
+                    </Label>
+                </Grid>
+
+            </Grid>
+            
+        </Grid>
+        
+        <!--Overlay Grid-->
+        <Grid Name="uiOverlay" Grid.Row="1" Grid.RowSpan="2" Background="#7F000000" Visibility="Collapsed">
+
+            <ContentControl Name="uiWelcome" Visibility="Collapsed" Style="{StaticResource DialogGrid}" Height="150" Width="400" Tag="CVS History Viewer">
+                <DockPanel Margin="0,0,0,10">
+                    <Button Name="uiWelcomeButton" Content="Choose Directory" Click="WelcomeButton_Click" HorizontalAlignment="Center" Height="30" Padding="10,0,10,0" Style="{StaticResource Button}" DockPanel.Dock="Bottom"/>
+                    <TextBlock TextWrapping="Wrap" Padding="20" FontSize="13">
+                        Please select a folder. The application will scan its content and fetch all related information from CVS.
+                    </TextBlock>
+                </DockPanel>
+            </ContentControl>
+
+            <ContentControl Name="uiCVSMissing" Visibility="Collapsed" Style="{StaticResource DialogGrid}" Height="160" Width="400" Tag="CVS Missing">
+                <DockPanel Margin="0,0,0,10">
+                    <Button Content="Exit Application" Click="Close_Click" HorizontalAlignment="Center" Height="30" Padding="10,0,10,0" Style="{StaticResource Button}" DockPanel.Dock="Bottom"/>
+                    <TextBlock TextWrapping="Wrap" Padding="20" FontSize="13">
+                        “CVS” must be installed to use this application. Please ensure that it is installed and available via "Path". Afterwards restart the application
+                        and try again.
+                    </TextBlock>
+                </DockPanel>
+            </ContentControl>
+
+            <ContentControl Name="uiAbout" Visibility="Collapsed" Style="{StaticResource DialogGrid}" Height="200" Width="200" Tag="About CVS History Viewer">
+                <DockPanel Margin="0,0,0,10">
+                    <Button Content="Close" Click="CloseAbout_Click" HorizontalAlignment="Center" Height="30" Padding="10,0,10,0" Style="{StaticResource Button}" DockPanel.Dock="Bottom"/>
+                    <StackPanel>
+                        <StackPanel Orientation="Vertical">
+                            <Label Content="Copyright:"/>
+                            <Label Padding="5,0,5,5" Content="© Marcel Rütjerodt 2019"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Version:"/>
+                            <Label Name="uiAboutVersion"/>
+                        </StackPanel>
+                        <TextBlock Padding="5">
+                            <Hyperlink Click="License_Click">MIT License</Hyperlink><LineBreak/>
+                            <Hyperlink Click="ThirdPartyLicenses_Click">Third Party Licenses</Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </DockPanel>
+            </ContentControl>
+
+            <ContentControl Name="uiProgress" Visibility="Collapsed" Style="{StaticResource DialogGrid}" Height="160" Width="300" Tag="Updating Commits">
+                <DockPanel Margin="0,0,0,10">
+                    <Button Name="uiCancelUpdate" Content="Cancel Update" Click="CancelUpdate_Click" HorizontalAlignment="Center" Height="30" Padding="10,0,10,0" Style="{StaticResource Button}" DockPanel.Dock="Bottom"/>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Label Name="uiUpdateState" Content="Initializing..." HorizontalAlignment="Center" Padding="5,5,5,0" FontSize="13"/>
+                        <Label Name="uiUpdateCounter" Content="0 of 0" HorizontalAlignment="Center" Padding="5,0,5,2" FontSize="13"/>
+                        <ProgressBar Name="uiUpdateProgress" Value="0"/>
+                    </StackPanel>
+                </DockPanel>
+            </ContentControl>
+
+        </Grid>
+        
+    </Grid>
+    
+</Window>
