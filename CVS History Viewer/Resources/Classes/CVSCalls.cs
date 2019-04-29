@@ -325,10 +325,10 @@ namespace CVS_History_Viewer.Resources.Classes
                     switch (sBlockKind)
                     {
                         case "a":
-                            oChange.sAction = "+";
+                            oChange.sAction = "-";
                             break;
                         case "d":
-                            oChange.sAction = "-";
+                            oChange.sAction = "+";
                             break;
                         default:
                             oChange.sAction = "-";
