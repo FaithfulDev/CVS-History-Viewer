@@ -300,7 +300,10 @@ namespace CVS_History_Viewer.Resources.Classes
             {
                 DiffBlock.LineChange oChange = new DiffBlock.LineChange();
 
-                if (cLines[i].Substring(0,1) == "<")
+                if (string.IsNullOrEmpty(cLines[i]))
+                {
+                    //Do nothing.
+                }else if (cLines[i].Substring(0,1) == "<")
                 {
                     oChange.sAction = "+";
                     oChange.sLine = cLines[i].Substring(1, cLines[i].Length - 1);
@@ -326,7 +329,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 }
                 else if(cLines[i] == "---" || cLines[i].Substring(0, 1) == "\\")
                 {
-                    //Nothing
+                    //Do Nothing
                 }
                 else
                 {
