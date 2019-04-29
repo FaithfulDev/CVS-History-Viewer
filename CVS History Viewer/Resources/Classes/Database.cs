@@ -443,11 +443,13 @@ namespace CVS_History_Viewer.Resources.Classes
                 //Save File
                 if (cCommits[0].cRevisions[0].oFile.iID == 0)
                 {
+                    string sCVSPath = (cCommits[0].cRevisions[0].oFile.sCVSPath != null) ? cCommits[0].cRevisions[0].oFile.sCVSPath.Replace("'", @"''") : "";
+
                     sSQL = $@"INSERT INTO Files (ID, Name, Path, CVSPath, LastUpdated, Deleted) VALUES
                               (Null,
                               '{cCommits[0].cRevisions[0].oFile.sName.Replace("'", @"''")}', 
                               '{cCommits[0].cRevisions[0].oFile.sPath.Replace("'", @"''")}', 
-                              '{cCommits[0].cRevisions[0].oFile.sCVSPath.Replace("'", @"''")}', 
+                              '{sCVSPath}', 
                               '{cCommits[0].cRevisions[0].oFile.dLastUpdated.ToString("yyyy-MM-dd HH:mm:ss")}',
                                {(cCommits[0].cRevisions[0].oFile.bDeleted ? 1 : 0)} );";
 

@@ -66,61 +66,13 @@ namespace CVS_History_Viewer.Resources.Classes
             }
 
             int iLine = 0;
-            List<KeyValuePair<string, string>> cRawTags = new List<KeyValuePair<string, string>>();            
-
-            if(oFile.iID == 0)
+            List<KeyValuePair<string, string>> cRawTags = new List<KeyValuePair<string, string>>();
+            string sRCS = null;
+            if (oFile.iID == 0)
             {
                 if (cLines[1].Contains("RCS file:"))
                 {
-                    string sRCS = cLines[1].Replace("RCS file: ", "").Replace("/" + oFile.sName + ",v", "");
-
-                    string[] aSplitTempRCS = sRCS.Split('/');
-
-                    List<string> cSplitRCS = new List<string>();
-                    foreach(string sPart in aSplitTempRCS)
-                    {
-                        if (!string.IsNullOrWhiteSpace(sPart))
-                        {
-                            string[] aSplitTemp2RCS = sPart.Split('\\');
-                            foreach(string sPart2 in aSplitTemp2RCS)
-                            {
-                                if (!string.IsNullOrWhiteSpace(sPart2))
-                                {
-                                    cSplitRCS.Add(sPart2);
-                                }
-                            }                            
-                        }
-                    }
-
-                    List<string> cSplitFile = new List<string>(oFile.sPath.Split('\\'));
-
-                    int iCount = 0;
-                    if (cSplitRCS.Count < cSplitFile.Count)
-                    {
-                        iCount = cSplitRCS.Count;
-                    }
-                    else
-                    {
-                        iCount = cSplitFile.Count;
-                    }
-
-                    List<string> cMatches = new List<string>();
-                    for(int g = iCount - 1; g >= 0; g--)
-                    {
-                        if(cSplitRCS[g] == cSplitFile[g])
-                        {
-                            cMatches.Add(cSplitRCS[g]);
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    for(int g = cMatches.Count - 1; g >= 0; g--)
-                    {
-                        oFile.sCVSPath += cMatches[g] + ((g != 0)? "/" : "");
-                    }
+                    sRCS = cLines[1].Replace("RCS file: ", "").Replace("/" + oFile.sName + ",v", "");                    
                 }
             }           
 
@@ -267,6 +219,66 @@ namespace CVS_History_Viewer.Resources.Classes
                 if (cLines.Count - 1 - i < 5)
                 {
                     break;
+                }
+            }
+
+            //Set CVS Path for File Object
+            if (oFile.iID == 0 && !string.IsNullOrWhiteSpace(sRCS))
+            {
+                if (cCommits[0].cRevisions[0].sState == "dead")
+                {
+                    sRCS = sRCS.Replace("/Attic", "");
+                }
+
+                string[] aSplitTempRCS = sRCS.Split('/');
+
+                List<string> cSplitRCS = new List<string>();
+                foreach (string sPart in aSplitTempRCS)
+                {
+                    if (!string.IsNullOrWhiteSpace(sPart))
+                    {
+                        string[] aSplitTemp2RCS = sPart.Split('\\');
+                        foreach (string sPart2 in aSplitTemp2RCS)
+                        {
+                            if (!string.IsNullOrWhiteSpace(sPart2))
+                            {
+                                cSplitRCS.Add(sPart2);
+                            }
+                        }
+                    }
+                }
+
+                List<string> cSplitFile = new List<string>(oFile.sPath.Split('\\'));
+
+                int iCount = 0;
+                if (cSplitRCS.Count < cSplitFile.Count)
+                {
+                    iCount = cSplitRCS.Count;
+                }
+                else
+                {
+                    iCount = cSplitFile.Count;
+                }
+
+                int iRCSIndex = cSplitRCS.Count - 1;
+                int iFileIndex = cSplitFile.Count - 1;
+
+                List<string> cMatches = new List<string>();
+                for (int g = iCount - 1; g >= 0; g--)
+                {
+                    if (cSplitRCS[iRCSIndex] == cSplitFile[iFileIndex--])
+                    {
+                        cMatches.Add(cSplitRCS[iRCSIndex--]);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                for (int g = cMatches.Count - 1; g >= 0; g--)
+                {
+                    oFile.sCVSPath += cMatches[g] + ((g != 0) ? "/" : "");
                 }
             }
 
