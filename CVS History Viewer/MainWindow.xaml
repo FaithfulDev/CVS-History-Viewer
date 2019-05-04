@@ -66,7 +66,7 @@
             <Grid Grid.Row="0">
                 <DockPanel Margin="10,5,10,5">
                     <Button Name="uiSearch" Content="&#xf002;" FontFamily="{StaticResource FontAwesomeSolid}" Click="Search_Click" DockPanel.Dock="Right" Width="{Binding Path=ActualHeight, RelativeSource={RelativeSource Self}}" VerticalAlignment="Stretch" Style="{StaticResource Button}"/>
-                    <TextBox Name="uiSearchText" VerticalContentAlignment="Center" KeyUp="SearchText_KeyUp"/>
+                    <TextBox Name="uiSearchText" VerticalContentAlignment="Center" KeyUp="SearchText_KeyUp" FontSize="13"/>
                 </DockPanel>
             </Grid>            
             

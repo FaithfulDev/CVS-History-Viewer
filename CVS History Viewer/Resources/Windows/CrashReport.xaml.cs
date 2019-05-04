@@ -25,6 +25,7 @@ namespace CVS_History_Viewer.Resources.Windows
             string sBody = Uri.EscapeUriString($"## What happened in your own words?\n\n\n\n ## Stacktrace\n```cs\n{this.uiStacktrace.Text}\n```");
             string sTitle = Uri.EscapeUriString($"Crash Report: \"{((Exception)this.uiStacktrace.Tag).Message}\"");
             sBody = sBody.Replace("#", "%23");
+            sBody = sBody.Replace("&", "%26");
             string sURL = $@"https://github.com/NinjaPewPew/CVS-History-Viewer/issues/new?labels=crash+report&title={sTitle}&body={sBody}";
             System.Diagnostics.Process.Start(sURL);
         }
