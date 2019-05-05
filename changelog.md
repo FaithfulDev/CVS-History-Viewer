@@ -1,5 +1,9 @@
 # CVS History Viewer Changelog
 
+## v1.0.2 (Unreleased)
+### Bugfix
+* (#6) "&"-Sign is now also being URL encoded and will no longer break the "Report Issue" URL.
+
 ## v1.0.1 (Released 2019/04/29)
 ### Bugfix
 * (#1) Fixed a crash that were caused when analyzing diff with empty diff lines.
