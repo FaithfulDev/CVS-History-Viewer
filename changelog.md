@@ -6,6 +6,7 @@
 * (#16) Line numbers in Diff view are now padded, so that they right-align with each other.
 * (#17) Diff view now uses the "Consolas" font, which is monospaced, meaning that each character takes up the same space.
 ### Bugfix
+* (#5) Progress bar is now filling up correctly.
 * (#6) "&"-Sign is now also being URL encoded and will no longer break the "Report Issue" URL.
 
 ## v1.0.1 (Released 2019/04/29)

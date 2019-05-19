@@ -223,6 +223,7 @@ namespace CVS_History_Viewer
         {
             UpdateProgress oProgress = (UpdateProgress)e.UserState;
             this.uiUpdateCounter.Content = $"{oProgress.iDone} of {oProgress.iTotal}";
+            this.uiUpdateProgress.Value = Math.Round((double)oProgress.iDone * 100 / oProgress.iTotal, 0);
 
             if(oProgress.iDone == 1)
             {
