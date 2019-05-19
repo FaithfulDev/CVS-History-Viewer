@@ -35,6 +35,8 @@ namespace CVS_History_Viewer
 
         private DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
 
+        private bool bIssueOnLoad = true;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -98,14 +100,27 @@ namespace CVS_History_Viewer
                 return;
             }
 
-            LoadFromDB();     
+            bIssueOnLoad = false;
+            ShowLoadingData();
+        }
+
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            if (bIssueOnLoad)
+            {
+                return;
+            }
+
+            LoadFromDB();
 
             //Create & Show UI Commit list
             this.uiCommits.ItemsSource = cCommits;
             this.uiCommits.SelectedIndex = 0;
+
+            HideLoadingData();
         }
 
-        private void LoadFromDB(string sSearch = " AND 1 = 1")
+        private void LoadFromDB(string sSearch = " AND 1 = 1", string sLimit = " LIMIT 220")
         {
             // * File List (associated with root directory).
             cFiles = oDatabase.GetFiles(oSettings.sRootDirectory);
@@ -117,7 +132,7 @@ namespace CVS_History_Viewer
             cCommitTags = oDatabase.GetCommitTags(cTags);
 
             // * Commits (associated with root directory).
-            cCommits = oDatabase.GetCommits(oSettings.sRootDirectory, sSearch, cCommitTags);
+            cCommits = oDatabase.GetCommits(oSettings.sRootDirectory, sSearch, sLimit, cCommitTags);
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -301,7 +316,8 @@ namespace CVS_History_Viewer
                 { "hash", "commit:[ ]{0,1}(.+?)[ ]{1}" },
                 { "date", "date:[ ]{0,1}(.+?)[ ]{1}" },
                 { "from", "from:[ ]{0,1}(.+?)[ ]{1}" },
-                { "to", "to:[ ]{0,1}(.+?)[ ]{1}" }
+                { "to", "to:[ ]{0,1}(.+?)[ ]{1}" },
+                { "limit", "limit:[ ]{0,1}([0-9]+?)[ ]{1}" }
             };
 
             foreach (KeyValuePair<string, string> oPattern in cPatterns)
@@ -339,6 +355,7 @@ namespace CVS_History_Viewer
             }
 
             string sWhere = "";
+            string sLimit = "";
 
             foreach(KeyValuePair<string, object> oPair in cPairs)
             {
@@ -355,6 +372,9 @@ namespace CVS_History_Viewer
                         break;
                     case "description":
                         sWhere += $" AND {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}'";
+                        break;
+                    case "limit":
+                        sLimit = " LIMIT " + oPair.Value;
                         break;
                 }
             }
@@ -394,7 +414,7 @@ namespace CVS_History_Viewer
                 }
             }
 
-            LoadFromDB(sWhere);
+            LoadFromDB(sWhere, sLimit);
 
             //Create & Show UI Commit list
             this.uiCommits.ItemsSource = cCommits;
@@ -481,6 +501,18 @@ namespace CVS_History_Viewer
         {
             this.uiOverlay.Visibility = Visibility.Visible;
             this.uiCVSMissing.Visibility = Visibility.Visible;
+        }
+
+        private void ShowLoadingData()
+        {
+            this.uiOverlay.Visibility = Visibility.Visible;
+            this.uiLoadingData.Visibility = Visibility.Visible;
+        }
+
+        private void HideLoadingData()
+        {
+            this.uiOverlay.Visibility = Visibility.Collapsed;
+            this.uiLoadingData.Visibility = Visibility.Collapsed;
         }
 
         private void WelcomeButton_Click(object sender, RoutedEventArgs e)

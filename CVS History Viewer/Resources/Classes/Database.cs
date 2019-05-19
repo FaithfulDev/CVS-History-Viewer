@@ -303,7 +303,7 @@ namespace CVS_History_Viewer.Resources.Classes
             return cCommitTags;
         }
 
-        public List<Commit> GetCommits(string sRootDirectory, string sFilter, List<CommitTag> cCommitTags)
+        public List<Commit> GetCommits(string sRootDirectory, string sFilter, string sLimit, List<CommitTag> cCommitTags)
         {
             List<Commit> cCommits = new List<Commit>();
 
@@ -316,10 +316,12 @@ namespace CVS_History_Viewer.Resources.Classes
                              FROM Commits
                              LEFT JOIN Files ON Files.ID = Commits.FileID
                              WHERE Commits.HASH IN (
-                                     SELECT Commits.HASH 
+                                     SELECT DISTINCT Commits.HASH 
                                      FROM Commits
                                      LEFT JOIN Files ON Files.ID = Commits.FileID
                                      WHERE Path LIKE '{sRootDirectory.Replace("'", @"''")}%' {sFilter}
+                                     ORDER BY Date DESC, HASH ASC
+                                     {sLimit}
                                 )
                              ORDER BY Date DESC, HASH ASC;";
 

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CVS_History_Viewer"
         mc:Ignorable="d"
-        Title="CVS History Viewer" Name="MWindow" Height="800" Width="1280" Loaded="Window_Loaded" Style="{StaticResource CustomChrome}" WindowStartupLocation="CenterScreen" Icon="Resources/Images/icon.ico">
+        Title="CVS History Viewer" Name="MWindow" Height="800" Width="1280" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered" Style="{StaticResource CustomChrome}" WindowStartupLocation="CenterScreen" Icon="Resources/Images/icon.ico">
     <Grid SnapsToDevicePixels="True">
 
         <Grid.RowDefinitions>
@@ -164,7 +164,7 @@
         </Grid>
         
         <!--Overlay Grid-->
-        <Grid Name="uiOverlay" Grid.Row="1" Grid.RowSpan="2" Background="#7F000000" Visibility="Collapsed">
+        <Grid Name="uiOverlay" Grid.Row="1" Grid.RowSpan="2" Background="#7F000000" Visibility="Visible">
 
             <ContentControl Name="uiWelcome" Visibility="Collapsed" Style="{StaticResource DialogGrid}" Height="150" Width="400" Tag="CVS History Viewer">
                 <DockPanel Margin="0,0,0,10">
@@ -214,6 +214,12 @@
                         <ProgressBar Name="uiUpdateProgress" Value="0"/>
                     </StackPanel>
                 </DockPanel>
+            </ContentControl>
+
+            <ContentControl Name="uiLoadingData" Visibility="Visible" Style="{StaticResource DialogGrid}" Height="100" Width="300" Tag="Loading Data">               
+                <TextBlock TextWrapping="Wrap" Padding="0" FontSize="13" TextAlignment="Center" VerticalAlignment="Center">
+                    Loading Data. Please wait a moment.
+                </TextBlock>
             </ContentControl>
 
         </Grid>
