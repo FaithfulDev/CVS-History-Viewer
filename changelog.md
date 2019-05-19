@@ -8,6 +8,7 @@
 ### Bugfix
 * (#5) Progress bar is now filling up correctly.
 * (#6) "&"-Sign is now also being URL encoded and will no longer break the "Report Issue" URL.
+* (#13) Revision/Diff view is now reset, when no search results are found.
 
 ## v1.0.1 (Released 2019/04/29)
 ### Bugfix

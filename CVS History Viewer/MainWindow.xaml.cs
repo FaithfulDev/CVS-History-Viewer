@@ -370,6 +370,14 @@ namespace CVS_History_Viewer
         {
             if(this.uiCommits.SelectedItem == null)
             {
+                this.uiCommitHASH.Text = "";
+                this.uiCommitAuthor.Text = "";
+                this.uiCommitDate.Text = "";
+                this.uiCommitDescription.Text = "";
+
+                this.uiCommitRevisions.Items.Clear();
+                this.uiDiffView.Children.Clear();
+
                 return;
             }            
 
