@@ -150,6 +150,7 @@ namespace CVS_History_Viewer
         private void UpdateCommits_BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             List<CVSFile> cOutDatedFiles = new List<CVSFile>();
+            List<CVSFile> cTempFileList = cFiles;
             UpdateProgress oProgress = new UpdateProgress();
 
             //Get List of all Files in the root
@@ -164,22 +165,28 @@ namespace CVS_History_Viewer
             foreach (FileInfo oFileInfo in cFileInfos)
             {
                 bool bFound = false;
-                foreach (CVSFile oFile in cFiles)
+                for(int i = cTempFileList.Count - 1; i >= 0; i--)
                 {
-                    if (oFile.sName == oFileInfo.Name && oFile.sPath == oFileInfo.DirectoryName)
+                    if (cTempFileList[i].sName == oFileInfo.Name && cTempFileList[i].sPath == oFileInfo.DirectoryName)
                     {
                         bFound = true;
 
-                        if (oFile.dLastUpdated < oFileInfo.LastWriteTime.AddTicks(-oFileInfo.LastWriteTime.Ticks % TimeSpan.TicksPerSecond))
+                        if (cTempFileList[i].dLastUpdated < oFileInfo.LastWriteTime.AddTicks(-oFileInfo.LastWriteTime.Ticks % TimeSpan.TicksPerSecond))
                         {
-                            oFile.dLastUpdated = oFileInfo.LastWriteTime;
-                            oFile.bDeleted = false;
-                            cOutDatedFiles.Add(oFile);
+                            cTempFileList[i].dLastUpdated = oFileInfo.LastWriteTime;
+                            cTempFileList[i].bDeleted = false;
+                            cOutDatedFiles.Add(cTempFileList[i]);
                             oProgress.iTotal = cOutDatedFiles.Count;
-                            oUpdateCommitsWorker.ReportProgress(0, oProgress);
+                            oUpdateCommitsWorker.ReportProgress(0, oProgress);                            
                         }
 
+                        cTempFileList.RemoveAt(i);
                         break;
+                    }
+
+                    if (oUpdateCommitsWorker.CancellationPending)
+                    {
+                        return;
                     }
                 }
 
@@ -192,7 +199,7 @@ namespace CVS_History_Viewer
             }
 
             //Look for deleted files (files known to the DB, but not findable in the directory)
-            foreach (CVSFile oFile in cFiles)
+            foreach (CVSFile oFile in cTempFileList)
             {
                 bool bFound = false;
                 foreach (FileInfo oFileInfo in cFileInfos)
@@ -263,6 +270,7 @@ namespace CVS_History_Viewer
 
             this.uiProgress.Visibility = Visibility.Collapsed;
             this.uiOverlay.Visibility = Visibility.Collapsed;
+            this.uiCancelUpdate.IsEnabled = true;
         }
 
         private void FetchNewCommitsFromCVS(CVSFile oFile)
