@@ -8,6 +8,7 @@ namespace CVS_History_Viewer.Resources.Classes
 
         //Setting Variables
         public string sRootDirectory = null;
+        public int iWhitespace = 3;
 
         public Settings(string sSettingsFilePath)
         {

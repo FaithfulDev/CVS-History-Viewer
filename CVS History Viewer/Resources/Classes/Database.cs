@@ -28,7 +28,8 @@ namespace CVS_History_Viewer.Resources.Classes
                 oSQLiteConnection.Open();
 
                 bool bExist = false;
-                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table' AND name='Files';",
+                string sSQL = "";
+                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT sql FROM sqlite_master WHERE type='table' AND name='Files';",
                                                               oSQLiteConnection))
                 {
                     using (SQLiteDataReader oReader = oCmd.ExecuteReader())
@@ -55,7 +56,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 }
 
                 bExist = false;
-                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table' AND name='Tags';",
+                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT sql FROM sqlite_master WHERE type='table' AND name='Tags';",
                                                               oSQLiteConnection))
                 {
                     using (SQLiteDataReader oReader = oCmd.ExecuteReader())
@@ -77,7 +78,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 }
 
                 bExist = false;
-                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table' AND name='Commits';",
+                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT sql FROM sqlite_master WHERE type='table' AND name='Commits';",
                                                               oSQLiteConnection))
                 {
                     using (SQLiteDataReader oReader = oCmd.ExecuteReader())
@@ -85,6 +86,7 @@ namespace CVS_History_Viewer.Resources.Classes
                         while (oReader.Read())
                         {
                             bExist = true;
+                            sSQL = oReader["sql"].ToString();
                             break;
                         }
                     }
@@ -103,13 +105,23 @@ namespace CVS_History_Viewer.Resources.Classes
 	                                    LinesChanged	TEXT NOT NULL,
 	                                    HASH	TEXT NOT NULL,
                                         ReAdded	INTEGER NOT NULL DEFAULT 0,
+                                        Whitespace INTEGER  DEFAULT (3) NOT NULL,
 	                                    PRIMARY KEY('FileID','Revision'),
 	                                    FOREIGN KEY('FileID') REFERENCES 'Files'('ID')
                                     );", oSQLiteConnection).ExecuteNonQuery();
                 }
+                else
+                {
+                    if (!sSQL.ToLower().Contains("whitespace integer"))
+                    {
+                        new SQLiteCommand(@"ALTER TABLE Commits
+                                            ADD Whitespace INTEGER DEFAULT (3)
+                                            NOT NULL;", oSQLiteConnection).ExecuteNonQuery();
+                    }
+                }
 
                 bExist = false;
-                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table' AND name='CommitTags';",
+                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT sql FROM sqlite_master WHERE type='table' AND name='CommitTags';",
                                                               oSQLiteConnection))
                 {
                     using (SQLiteDataReader oReader = oCmd.ExecuteReader())
@@ -132,7 +144,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 }
 
                 bExist = false;
-                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table' AND name='DiffBlocks';",
+                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT sql FROM sqlite_master WHERE type='table' AND name='DiffBlocks';",
                                                               oSQLiteConnection))
                 {
                     using (SQLiteDataReader oReader = oCmd.ExecuteReader())
@@ -156,7 +168,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 }
 
                 bExist = false;
-                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT name FROM sqlite_master WHERE type='table' AND name='DiffLines';",
+                using (SQLiteCommand oCmd = new SQLiteCommand("SELECT sql FROM sqlite_master WHERE type='table' AND name='DiffLines';",
                                                               oSQLiteConnection))
                 {
                     using (SQLiteDataReader oReader = oCmd.ExecuteReader())
@@ -335,6 +347,7 @@ namespace CVS_History_Viewer.Resources.Classes
 
                             oRevision = new Revision
                             {
+                                iCommitID = int.Parse(oReader["ID"].ToString()),
                                 sLinesChanged = oReader["LinesChanged"].ToString(),
                                 sRevision = oReader["Revision"].ToString(),
                                 sState = oReader["State"].ToString(),
@@ -346,7 +359,8 @@ namespace CVS_History_Viewer.Resources.Classes
                                     sPath = oReader["FilePath"].ToString(),
                                     sCVSPath = oReader["FileCVSPath"].ToString(),
                                     dLastUpdated = (DateTime)oReader["FileLastUpdated"]
-                                }
+                                },
+                                iWhitespace = int.Parse(oReader["Whitespace"].ToString())
                             };
 
                             string sSQL2 = $@"SELECT DiffBlocks.*, DiffLines.'Action', DiffLines.Line FROM DiffBlocks
@@ -484,7 +498,8 @@ namespace CVS_History_Viewer.Resources.Classes
                                 '{oRevision.sState}',
                                 '{oRevision.sLinesChanged}',
                                 '{oCommit.sHASH}',
-                                {(oRevision.bReAdded ? 1 : 0)}
+                                {(oRevision.bReAdded ? 1 : 0)},
+                                {oRevision.iWhitespace}
                             )";
 
                         new SQLiteCommand(sSQL, oSQLiteConnection).ExecuteNonQuery();
@@ -565,24 +580,13 @@ namespace CVS_History_Viewer.Resources.Classes
             {
                 oSQLiteConnection.Open();
 
-                int iCommitID = 0;
-                using (SQLiteCommand oCmd = new SQLiteCommand($"SELECT ID FROM Commits WHERE Revision = '{oRevision.sRevision}' AND FileID = {oRevision.oFile.iID}",
-                                                              oSQLiteConnection))
-                {
-                    using (SQLiteDataReader oReader = oCmd.ExecuteReader())
-                    {
-                        while (oReader.Read())
-                        {
-                            iCommitID = int.Parse(oReader["ID"].ToString());
-                            break;
-                        }
-                    }
-                }
+                new SQLiteCommand($@"UPDATE Commits SET Whitespace = {oRevision.iWhitespace} WHERE ID = {oRevision.iCommitID};", 
+                    oSQLiteConnection).ExecuteNonQuery();
 
                 foreach (DiffBlock oDiffBlock in oRevision.cDiffBlocks)
                 {
                     string sSQL = $@"INSERT INTO DiffBlocks (CommitID, StartLine, EndLine) VALUES (
-                                {iCommitID},
+                                {oRevision.iCommitID},
                                 {oDiffBlock.iStartLine},
                                 {oDiffBlock.iEndLine}
                                 )";
@@ -605,6 +609,25 @@ namespace CVS_History_Viewer.Resources.Classes
 
                 oSQLiteConnection.Close();
             }            
+        }
+
+        public void DeleteDiffLines(Revision oRevision)
+        {
+            using (SQLiteConnection oSQLiteConnection = SQLConnection())
+            {
+                oSQLiteConnection.Open();
+                
+                string sSQL = $@"DELETE FROM DiffLines
+                                 WHERE DiffBlockID IN (SELECT ID FROM DiffBlocks WHERE CommitID = {oRevision.iCommitID});";
+
+                new SQLiteCommand(sSQL, oSQLiteConnection).ExecuteNonQuery();
+
+                sSQL = $@"DELETE FROM DiffBlocks WHERE CommitID = {oRevision.iCommitID};";
+
+                new SQLiteCommand(sSQL, oSQLiteConnection).ExecuteNonQuery();
+
+                oSQLiteConnection.Close();
+            }
         }
     }
 }

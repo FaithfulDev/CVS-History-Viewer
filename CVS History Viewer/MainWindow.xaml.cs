@@ -497,6 +497,13 @@ namespace CVS_History_Viewer
             }
 
             Revision oRevision = (Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag;           
+            
+            if(oRevision.iWhitespace != oSettings.iWhitespace)
+            {
+                oDatabase.DeleteDiffLines(oRevision);
+                oRevision.cDiffBlocks.Clear();
+                oRevision.iWhitespace = oSettings.iWhitespace;
+            }
 
             if (oRevision.cDiffBlocks.Count > 0)
             {
@@ -521,6 +528,8 @@ namespace CVS_History_Viewer
             int iBlock = 1;
             foreach (DiffBlock oDiffBlock in oRevision.cDiffBlocks)
             {
+                int iPadLength = oRevision.cDiffBlocks[oRevision.cDiffBlocks.Count - 1].iEndLine.ToString().Length;
+
                 if(oDiffBlock.cDiffLines.Count == 0)
                 {
                     if(this.uiDiffView.Children.Count == 0)
@@ -551,13 +560,27 @@ namespace CVS_History_Viewer
                     int iLine = oDiffBlock.iStartLine;
                     foreach (DiffBlock.LineChange oChange in oDiffBlock.cLines)
                     {
-                        oDiffBlock.cDiffLines.Add(new TextBlock()
+                        TextBlock oTextBlock = new TextBlock();
+
+                        switch (oChange.sAction)
                         {
-                            Background = (oChange.sAction == "+") ? (Brush)new BrushConverter().ConvertFromString("#FFDDFFDD")
-                                                                  : (Brush)new BrushConverter().ConvertFromString("#FFFEE8E9"),
-                            Foreground = Brushes.Black,
-                            Text = $"{((oChange.sAction == "+") ? iLine++.ToString() : "#")} {oChange.sAction} {oChange.sLine}"
-                        });
+                            case "+":
+                                oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFDDFFDD");
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                break;
+                            case "-":
+                                oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFFEE8E9");
+                                oTextBlock.Text = $"{"#".PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                break;
+                            default:
+                                oTextBlock.Background = Brushes.White;
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')}   {oChange.sLine}";
+                                break;
+                        }
+
+                        oTextBlock.FontFamily = new FontFamily("Consolas");
+                        oTextBlock.Foreground = Brushes.Black;
+                        oDiffBlock.cDiffLines.Add(oTextBlock);
 
                         this.uiDiffView.Children.Add(oDiffBlock.cDiffLines[oDiffBlock.cDiffLines.Count - 1]);
                     }
