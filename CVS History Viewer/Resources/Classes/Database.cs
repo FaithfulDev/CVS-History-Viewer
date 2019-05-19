@@ -315,7 +315,12 @@ namespace CVS_History_Viewer.Resources.Classes
                                     (SELECT IFNULL(count(TagID),0) FROM CommitTags WHERE CommitID = Commits.ID) HasTags 
                              FROM Commits
                              LEFT JOIN Files ON Files.ID = Commits.FileID
-                             WHERE Path LIKE '{sRootDirectory.Replace("'", @"''")}%' {sFilter}
+                             WHERE Commits.HASH IN (
+                                     SELECT Commits.HASH 
+                                     FROM Commits
+                                     LEFT JOIN Files ON Files.ID = Commits.FileID
+                                     WHERE Path LIKE '{sRootDirectory.Replace("'", @"''")}%' {sFilter}
+                                )
                              ORDER BY Date DESC, HASH ASC;";
 
                 Commit oCommit;

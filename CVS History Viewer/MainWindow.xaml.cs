@@ -291,12 +291,12 @@ namespace CVS_History_Viewer
         {
             string sText = this.uiSearchText.Text.ToLower().Replace('*', '%') + " ";
             
-            Match oMatch;
+            MatchCollection cMatches;
             List<KeyValuePair<string, object>> cPairs = new List<KeyValuePair<string, object>>();
 
             Dictionary<string, string> cPatterns = new Dictionary<string, string>
             {
-                { "filename", "file:[ ]{0,1}(.+?)[ ]{1}" },
+                { "files.name", "file:[ ]{0,1}(.+?)[ ]{1}" },
                 { "author", "author:[ ]{0,1}(.+?)[ ]{1}" },
                 { "hash", "commit:[ ]{0,1}(.+?)[ ]{1}" },
                 { "date", "date:[ ]{0,1}(.+?)[ ]{1}" },
@@ -306,27 +306,30 @@ namespace CVS_History_Viewer
 
             foreach (KeyValuePair<string, string> oPattern in cPatterns)
             {
-                oMatch = new Regex(oPattern.Value).Match(sText);
+                cMatches = new Regex(oPattern.Value).Matches(sText);
 
-                if (oMatch.Groups[1].ToString() != "")
+                foreach(Match oMatch in cMatches)
                 {
-                    if(oPattern.Key == "date" || oPattern.Key == "from" || oPattern.Key == "to")
+                    if (oMatch.Groups[1].ToString() != "")
                     {
-                        try
+                        if (oPattern.Key == "date" || oPattern.Key == "from" || oPattern.Key == "to")
                         {
-                            cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, DateTime.Parse(oMatch.Groups[1].ToString())));
+                            try
+                            {
+                                cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, DateTime.Parse(oMatch.Groups[1].ToString())));
+                            }
+                            catch (Exception)
+                            {
+                                //do nothing - just a bad date.
+                            }
                         }
-                        catch (Exception)
+                        else
                         {
-                            //do nothing - just a bad date.
+                            cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, oMatch.Groups[1].ToString()));
                         }
-                    }
-                    else
-                    {
-                        cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, oMatch.Groups[1].ToString()));
-                    }
 
-                    sText = sText.Replace(oMatch.Value, "");
+                        sText = sText.Replace(oMatch.Value, "");
+                    }
                 }
             }
 
@@ -350,12 +353,44 @@ namespace CVS_History_Viewer
                     case "to":
                         sWhere += $" AND strftime('%Y-%m-%d', date) <= '{((DateTime)oPair.Value).ToString("yyyy-MM-dd")}'";
                         break;
-                    case "author":
-                    case "filename":
-                    case "hash":
                     case "description":
                         sWhere += $" AND {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}'";
                         break;
+                }
+            }
+
+            //Author, filename and hash need to be OR connected
+            Dictionary<string, string> cSubWheres = new Dictionary<string, string>
+            {
+                { "files.name", "" },
+                { "author", "" },
+                { "hash", "" }
+            };
+
+            foreach (KeyValuePair<string, object> oPair in cPairs)
+            {
+                switch (oPair.Key)
+                {
+                    case "files.name":
+                    case "author":
+                    case "hash":
+                        if (cSubWheres[oPair.Key] != "")
+                        {
+                            cSubWheres[oPair.Key] += $" OR {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash")? "%":"")}'";
+                        }
+                        else
+                        {
+                            cSubWheres[oPair.Key] += $"{oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash") ? "%" : "")}'";
+                        }
+                        break;
+                }                
+            }
+
+            foreach(KeyValuePair<string, string> oSubWhere in cSubWheres)
+            {
+                if (oSubWhere.Value != "")
+                {
+                    sWhere += " AND (" + oSubWhere.Value + ")";
                 }
             }
 
