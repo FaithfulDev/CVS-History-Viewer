@@ -126,15 +126,15 @@
                         <StackPanel>
                             <DockPanel>
                                 <TextBlock Text="Commit:" FontWeight="Bold" Margin="0,0,5,0"/>
-                                <TextBlock Name="uiCommitHASH"/>
+                                <TextBox Name="uiCommitHASH" Background="Transparent" BorderThickness="0" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True"/>
                             </DockPanel>
                             <DockPanel>
                                 <TextBlock Text="Author:" FontWeight="Bold" Margin="0,0,5,0"/>
-                                <TextBlock Name="uiCommitAuthor"/>
+                                <TextBox Name="uiCommitAuthor" Background="Transparent" BorderThickness="0" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True"/>
                             </DockPanel>
                             <DockPanel>
                                 <TextBlock Text="Date:" FontWeight="Bold" Margin="0,0,5,0"/>
-                                <TextBlock Name="uiCommitDate"/>
+                                <TextBox Name="uiCommitDate" Background="Transparent" BorderThickness="0" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True"/>
                             </DockPanel>
                             <TextBox  Name="uiCommitDescription" Background="Transparent" Margin="0,5,0,0" BorderThickness="0"
                                  Text="{Binding Text, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" />
