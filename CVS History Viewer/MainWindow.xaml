@@ -17,6 +17,7 @@
         <!--Header Grid-->
         <Grid Grid.Row="0" Background="#c5013c">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Name="uiShowAbout" Content="?" FontWeight="Bold" Click="ShowAbout_Click"  Height="20" Width="20" WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource Button}"/>
                 <Button Name="uiMinimize" Content="&#xf2d1;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Minimize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20" Style="{StaticResource Button}"/>
                 <Button Name="uiMaximize" Content="&#xf2d0;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Maximize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20">
                     <Button.Style>
@@ -49,7 +50,6 @@
             <StackPanel Orientation="Horizontal" Margin="10,0,10,0">
                 <Button Name="uiChooseDirectory" Content="Choose Directory" Click="ChooseDirectory_Click" Height="25" Padding="10,0,10,0" Style="{StaticResource Button}"/>
                 <Button Name="uiRefresh" Content="Refresh" Click="Refresh_Click" Height="25" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
-                <Button Name="uiShowAbout" Content="?" Click="ShowAbout_Click"  Height="25" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
             </StackPanel>
         </Grid>
 

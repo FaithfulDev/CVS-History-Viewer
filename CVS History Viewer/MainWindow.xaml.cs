@@ -550,7 +550,7 @@ namespace CVS_History_Viewer
 
         private void License_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start(System.AppDomain.CurrentDomain.BaseDirectory + "MIT License.txt");
+            System.Diagnostics.Process.Start(System.AppDomain.CurrentDomain.BaseDirectory + "LICENSE.txt");
         }
 
         private void ThirdPartyLicenses_Click(object sender, RoutedEventArgs e)
