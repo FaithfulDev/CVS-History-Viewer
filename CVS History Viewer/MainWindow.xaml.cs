@@ -280,7 +280,6 @@ namespace CVS_History_Viewer
             if(cNewCommits.Count == 0)
             {
                 //Save file, so that it won't be scanned again (unless it was updated of course).
-                oFile.bDeleted = false;
                 oDatabase.SaveFile(oFile);
                 return;
             }
