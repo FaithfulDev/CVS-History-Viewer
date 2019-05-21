@@ -105,7 +105,7 @@ namespace CVS_History_Viewer.Resources.Classes
 	                                    LinesChanged	TEXT NOT NULL,
 	                                    HASH	TEXT NOT NULL,
                                         ReAdded	INTEGER NOT NULL DEFAULT 0,
-                                        Whitespace INTEGER  DEFAULT (3) NOT NULL,
+                                        Whitespace INTEGER  DEFAULT (0) NOT NULL,
 	                                    PRIMARY KEY('FileID','Revision'),
 	                                    FOREIGN KEY('FileID') REFERENCES 'Files'('ID')
                                     );", oSQLiteConnection).ExecuteNonQuery();
@@ -115,7 +115,7 @@ namespace CVS_History_Viewer.Resources.Classes
                     if (!sSQL.ToLower().Contains("whitespace integer"))
                     {
                         new SQLiteCommand(@"ALTER TABLE Commits
-                                            ADD Whitespace INTEGER DEFAULT (3)
+                                            ADD Whitespace INTEGER DEFAULT (0)
                                             NOT NULL;", oSQLiteConnection).ExecuteNonQuery();
                     }
                 }
