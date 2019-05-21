@@ -636,5 +636,39 @@ namespace CVS_History_Viewer.Resources.Classes
                 oSQLiteConnection.Close();
             }
         }
+
+        public int GetRevisionCount(CVSFile oFile)
+        {
+
+            int iCount = 0;
+
+            if(oFile.iID == 0)
+            {
+                return iCount;
+            }
+
+            using(SQLiteConnection oSQLiteConnection = SQLConnection())
+            {
+                oSQLiteConnection.Open();
+
+                using (SQLiteCommand oCmd = new SQLiteCommand($"SELECT count(id) as count FROM Commits WHERE FileID = {oFile.iID};",
+                                                              oSQLiteConnection))
+                {
+                    using (SQLiteDataReader oReader = oCmd.ExecuteReader())
+                    {
+                        while (oReader.Read())
+                        {
+                            iCount = int.Parse(oReader["count"].ToString());
+                            break;
+                        }
+                    }
+                }
+
+                oSQLiteConnection.Close();
+            }
+
+            return iCount;
+
+        }
     }
 }

@@ -7,6 +7,7 @@
 * (#16) Line numbers in Diff view are now padded, so that they right-align with each other.
 * (#17) Diff view now uses the "Consolas" font, which is monospaced, meaning that each character takes up the same space.
 * (#18) App will now start-up a lot faster on big repositories, but commits will be limited to **220**. This limit can be overwritten by using the "limit" keyword (e.g. "limit:400").
+* (#20) Files that have been changed, but have no new commits, will now be checked again in the next refresh (even if no new change was made).
 ### Bugfix
 * (#5) Progress bar is now filling up correctly.
 * (#6) "&"-Sign is now also being URL encoded and will no longer break the "Report Issue" URL.

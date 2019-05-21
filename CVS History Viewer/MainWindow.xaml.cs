@@ -277,10 +277,10 @@ namespace CVS_History_Viewer
         {
             List<Commit> cNewCommits = CVSCalls.GetCommits(oFile, cTags);
 
-            if(cNewCommits.Count == 0)
+            if(cNewCommits.Count == 0 || oDatabase.GetRevisionCount(oFile) == cNewCommits.Count)
             {
-                //Save file, so that it won't be scanned again (unless it was updated of course).
-                oDatabase.SaveFile(oFile);
+                //This file has no (new) commits, maybe they are still pending. Skip saving this to the database.
+                //Next refresh might show a different result.
                 return;
             }
 
