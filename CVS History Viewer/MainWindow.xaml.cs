@@ -171,7 +171,8 @@ namespace CVS_History_Viewer
                     {
                         bFound = true;
 
-                        if (cTempFileList[i].dLastUpdated < oFileInfo.LastWriteTime.AddTicks(-oFileInfo.LastWriteTime.Ticks % TimeSpan.TicksPerSecond))
+                        if (cTempFileList[i].dLastUpdated < oFileInfo.LastWriteTime.AddTicks(-oFileInfo.LastWriteTime.Ticks % TimeSpan.TicksPerSecond)
+                            && !cTempFileList[i].bIgnored)
                         {
                             cTempFileList[i].dLastUpdated = oFileInfo.LastWriteTime;
                             cTempFileList[i].bDeleted = false;
@@ -277,10 +278,15 @@ namespace CVS_History_Viewer
         {
             List<Commit> cNewCommits = CVSCalls.GetCommits(oFile, cTags);
 
-            if(cNewCommits.Count == 0 || oDatabase.GetRevisionCount(oFile) == cNewCommits.Count)
+            if((cNewCommits.Count == 0 || oDatabase.GetRevisionCount(oFile) == cNewCommits.Count) && !oFile.bIgnored)
             {
                 //This file has no (new) commits, maybe they are still pending. Skip saving this to the database.
                 //Next refresh might show a different result.
+                return;
+            }else if(oFile.bIgnored)
+            {
+                //This file needs to be marked as ignored, to not be checked again next time.
+                oDatabase.SaveFile(oFile);
                 return;
             }
 

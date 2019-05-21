@@ -2,6 +2,7 @@
 
 ## v1.0.2 (Unreleased)
 ### Improvements
+* (#7) Ignored files (any CVS related ones) will now only be checked once and then never again.
 * (#12) File checking logic is now faster.
 * (#14) Diff view now shows "Whitespace" (unchanged lines) in between diff blocks.
 * (#16) Line numbers in Diff view are now padded, so that they right-align with each other.

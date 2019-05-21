@@ -37,6 +37,7 @@ namespace CVS_History_Viewer.Resources.Classes
                         while (oReader.Read())
                         {
                             bExist = true;
+                            sSQL = oReader["sql"].ToString();
                             break;
                         }
                     }
@@ -51,8 +52,18 @@ namespace CVS_History_Viewer.Resources.Classes
                                         CVSPath TEXT NOT NULL,
 	                                    LastUpdated	DATETIME NOT NULL,
                                         Deleted	INTEGER NOT NULL DEFAULT 0,
+                                        Ignored INTEGER NOT NULL DEFAULT 0,
                                         UNIQUE(Name, Path)
                                     );", oSQLiteConnection).ExecuteNonQuery();
+                }
+                else
+                {
+                    if (!sSQL.ToLower().Contains("ignored integer"))
+                    {
+                        new SQLiteCommand(@"ALTER TABLE Files
+                                            ADD Ignored INTEGER DEFAULT (0)
+                                            NOT NULL;", oSQLiteConnection).ExecuteNonQuery();
+                    }
                 }
 
                 bExist = false;
@@ -218,7 +229,8 @@ namespace CVS_History_Viewer.Resources.Classes
                                 sPath = oReader["Path"].ToString(),
                                 sCVSPath = oReader["CVSPath"].ToString(),
                                 dLastUpdated = (DateTime)oReader["LastUpdated"],
-                                bDeleted = (int.Parse(oReader["Deleted"].ToString()) == 1) ? true : false
+                                bDeleted = (int.Parse(oReader["Deleted"].ToString()) == 1) ? true : false,
+                                bIgnored = (int.Parse(oReader["Ignored"].ToString()) == 1) ? true : false
                             };
 
                             cFiles.Add(oFile);
@@ -466,13 +478,14 @@ namespace CVS_History_Viewer.Resources.Classes
                 {
                     string sCVSPath = (cCommits[0].cRevisions[0].oFile.sCVSPath != null) ? cCommits[0].cRevisions[0].oFile.sCVSPath.Replace("'", @"''") : "";
 
-                    sSQL = $@"INSERT INTO Files (ID, Name, Path, CVSPath, LastUpdated, Deleted) VALUES
+                    sSQL = $@"INSERT INTO Files (ID, Name, Path, CVSPath, LastUpdated, Deleted, Ignored) VALUES
                               (Null,
                               '{cCommits[0].cRevisions[0].oFile.sName.Replace("'", @"''")}', 
                               '{cCommits[0].cRevisions[0].oFile.sPath.Replace("'", @"''")}', 
                               '{sCVSPath}', 
                               '{cCommits[0].cRevisions[0].oFile.dLastUpdated.ToString("yyyy-MM-dd HH:mm:ss")}',
-                               {(cCommits[0].cRevisions[0].oFile.bDeleted ? 1 : 0)} );";
+                               {(cCommits[0].cRevisions[0].oFile.bDeleted ? 1 : 0)},
+                               {(cCommits[0].cRevisions[0].oFile.bIgnored ? 1 : 0)} );";
 
                     new SQLiteCommand(sSQL, oSQLiteConnection).ExecuteNonQuery();
 
@@ -482,7 +495,8 @@ namespace CVS_History_Viewer.Resources.Classes
                 {
                     sSQL = $@"UPDATE Files
                               SET LastUpdated = '{cCommits[0].cRevisions[0].oFile.dLastUpdated.ToString("yyyy-MM-dd HH:mm:ss")}', 
-                                  Deleted = {(cCommits[0].cRevisions[0].oFile.bDeleted ? 1 : 0)}
+                                  Deleted = {(cCommits[0].cRevisions[0].oFile.bDeleted ? 1 : 0)},
+                                  Ignored = {(cCommits[0].cRevisions[0].oFile.bIgnored ? 1 : 0)}
                               WHERE ID = {cCommits[0].cRevisions[0].oFile.iID};";
 
                     new SQLiteCommand(sSQL, oSQLiteConnection).ExecuteNonQuery();
@@ -556,13 +570,14 @@ namespace CVS_History_Viewer.Resources.Classes
                 //Save File
                 if (oFile.iID == 0)
                 {
-                    string sSQL = $@"INSERT INTO Files (ID, Name, Path, CVSPath, LastUpdated, Deleted) VALUES
+                    string sSQL = $@"INSERT INTO Files (ID, Name, Path, CVSPath, LastUpdated, Deleted, Ignored) VALUES
                               (Null,
                               '{oFile.sName.Replace("'", @"''")}', 
                               '{oFile.sPath.Replace("'", @"''")}', 
                               '{((oFile.sCVSPath != null) ? oFile.sCVSPath.Replace("'", @"''") : "")}',
                               '{oFile.dLastUpdated.ToString("yyyy-MM-dd HH:mm:ss")}',
-                               {(oFile.bDeleted ? 1 : 0)});";
+                               {(oFile.bDeleted ? 1 : 0)},
+                               {(oFile.bIgnored ? 1 : 0)});";
 
                     new SQLiteCommand(sSQL, oSQLiteConnection).ExecuteNonQuery();
 
@@ -571,7 +586,8 @@ namespace CVS_History_Viewer.Resources.Classes
                 else
                 {
                     string sSQL = $@"UPDATE Files
-                              SET LastUpdated = '{oFile.dLastUpdated.ToString("yyyy-MM-dd HH:mm:ss")}', Deleted = {(oFile.bDeleted ? 1 : 0)}
+                              SET LastUpdated = '{oFile.dLastUpdated.ToString("yyyy-MM-dd HH:mm:ss")}', Deleted = {(oFile.bDeleted ? 1 : 0)},
+                              Ignored = {(oFile.bIgnored ? 1 : 0)}
                               WHERE ID = {oFile.iID};";
 
                     new SQLiteCommand(sSQL, oSQLiteConnection).ExecuteNonQuery();

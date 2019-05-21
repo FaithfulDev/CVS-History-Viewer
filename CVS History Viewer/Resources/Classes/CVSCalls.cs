@@ -53,6 +53,7 @@ namespace CVS_History_Viewer.Resources.Classes
             if (sTest.Contains("CVS\\Repository") || sTest.Contains("CVS\\Root") || sTest.Contains("CVS\\Entries") || sTest.Contains("CVS\\Baserev"))
             {
                 Console.WriteLine($"Ignored: {oFile.sPath}\\{oFile.sName}");
+                oFile.bIgnored = true;
                 return cCommits;
             }
 
