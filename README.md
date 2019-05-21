@@ -17,5 +17,6 @@ You can use a number ob simple keywords, to filter down the commits as much as y
 | date  | Show commits done on a specific day.  | date:24.09.2019 (use your regional date format) |
 | from  | Show commits starting from this date.  | |
 | to  | Show commits done before and including this date. | |
+| limit  | Overwrite default limit of 220 commit search results. This will have negative effects on performance. | limit:400 |
 
 **And of course you can use the "*" wildcard!**

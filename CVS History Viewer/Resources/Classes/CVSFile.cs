@@ -10,6 +10,7 @@ namespace CVS_History_Viewer.Resources.Classes
         public DateTime dLastUpdated;
         public bool bDeleted = false;
         public string sCVSPath;
+        public bool bIgnored = false;
 
         public CVSFile()
         {

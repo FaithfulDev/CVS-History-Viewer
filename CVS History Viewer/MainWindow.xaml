@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CVS_History_Viewer"
         mc:Ignorable="d"
-        Title="CVS History Viewer" Name="MWindow" Height="800" Width="1280" Loaded="Window_Loaded" Style="{StaticResource CustomChrome}" WindowStartupLocation="CenterScreen" Icon="Resources/Images/icon.ico">
+        Title="CVS History Viewer" Name="MWindow" Height="800" Width="1280" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered" Style="{StaticResource CustomChrome}" WindowStartupLocation="CenterScreen" Icon="Resources/Images/icon.ico">
     <Grid SnapsToDevicePixels="True">
 
         <Grid.RowDefinitions>
@@ -17,6 +17,7 @@
         <!--Header Grid-->
         <Grid Grid.Row="0" Background="#c5013c">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Name="uiShowAbout" Content="?" FontWeight="Bold" Click="ShowAbout_Click"  Height="20" Width="20" WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource Button}"/>
                 <Button Name="uiMinimize" Content="&#xf2d1;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Minimize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20" Style="{StaticResource Button}"/>
                 <Button Name="uiMaximize" Content="&#xf2d0;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Maximize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20">
                     <Button.Style>
@@ -49,7 +50,6 @@
             <StackPanel Orientation="Horizontal" Margin="10,0,10,0">
                 <Button Name="uiChooseDirectory" Content="Choose Directory" Click="ChooseDirectory_Click" Height="25" Padding="10,0,10,0" Style="{StaticResource Button}"/>
                 <Button Name="uiRefresh" Content="Refresh" Click="Refresh_Click" Height="25" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
-                <Button Name="uiShowAbout" Content="?" Click="ShowAbout_Click"  Height="25" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
             </StackPanel>
         </Grid>
 
@@ -66,7 +66,7 @@
             <Grid Grid.Row="0">
                 <DockPanel Margin="10,5,10,5">
                     <Button Name="uiSearch" Content="&#xf002;" FontFamily="{StaticResource FontAwesomeSolid}" Click="Search_Click" DockPanel.Dock="Right" Width="{Binding Path=ActualHeight, RelativeSource={RelativeSource Self}}" VerticalAlignment="Stretch" Style="{StaticResource Button}"/>
-                    <TextBox Name="uiSearchText" VerticalContentAlignment="Center" KeyUp="SearchText_KeyUp"/>
+                    <TextBox Name="uiSearchText" VerticalContentAlignment="Center" KeyUp="SearchText_KeyUp" FontSize="13"/>
                 </DockPanel>
             </Grid>            
             
@@ -126,15 +126,15 @@
                         <StackPanel>
                             <DockPanel>
                                 <TextBlock Text="Commit:" FontWeight="Bold" Margin="0,0,5,0"/>
-                                <TextBlock Name="uiCommitHASH"/>
+                                <TextBox Name="uiCommitHASH" Background="Transparent" BorderThickness="0" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True"/>
                             </DockPanel>
                             <DockPanel>
                                 <TextBlock Text="Author:" FontWeight="Bold" Margin="0,0,5,0"/>
-                                <TextBlock Name="uiCommitAuthor"/>
+                                <TextBox Name="uiCommitAuthor" Background="Transparent" BorderThickness="0" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True"/>
                             </DockPanel>
                             <DockPanel>
                                 <TextBlock Text="Date:" FontWeight="Bold" Margin="0,0,5,0"/>
-                                <TextBlock Name="uiCommitDate"/>
+                                <TextBox Name="uiCommitDate" Background="Transparent" BorderThickness="0" Text="{Binding Text, Mode=OneWay}" IsReadOnly="True"/>
                             </DockPanel>
                             <TextBox  Name="uiCommitDescription" Background="Transparent" Margin="0,5,0,0" BorderThickness="0"
                                  Text="{Binding Text, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" />
@@ -214,6 +214,12 @@
                         <ProgressBar Name="uiUpdateProgress" Value="0"/>
                     </StackPanel>
                 </DockPanel>
+            </ContentControl>
+
+            <ContentControl Name="uiLoadingData" Visibility="Collapsed" Style="{StaticResource DialogGrid}" Height="100" Width="300" Tag="Loading Data">               
+                <TextBlock TextWrapping="Wrap" Padding="0" FontSize="13" TextAlignment="Center" VerticalAlignment="Center">
+                    Loading Data. Please wait a moment.
+                </TextBlock>
             </ContentControl>
 
         </Grid>

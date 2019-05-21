@@ -35,6 +35,8 @@ namespace CVS_History_Viewer
 
         private DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
 
+        private bool bIssueOnLoad = true;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -98,14 +100,27 @@ namespace CVS_History_Viewer
                 return;
             }
 
-            LoadFromDB();     
+            bIssueOnLoad = false;
+            ShowLoadingData();
+        }
+
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            if (bIssueOnLoad)
+            {
+                return;
+            }
+
+            LoadFromDB();
 
             //Create & Show UI Commit list
             this.uiCommits.ItemsSource = cCommits;
             this.uiCommits.SelectedIndex = 0;
+
+            HideLoadingData();
         }
 
-        private void LoadFromDB(string sSearch = " AND 1 = 1")
+        private void LoadFromDB(string sSearch = " AND 1 = 1", string sLimit = " LIMIT 220")
         {
             // * File List (associated with root directory).
             cFiles = oDatabase.GetFiles(oSettings.sRootDirectory);
@@ -117,7 +132,7 @@ namespace CVS_History_Viewer
             cCommitTags = oDatabase.GetCommitTags(cTags);
 
             // * Commits (associated with root directory).
-            cCommits = oDatabase.GetCommits(oSettings.sRootDirectory, sSearch, cCommitTags);
+            cCommits = oDatabase.GetCommits(oSettings.sRootDirectory, sSearch, sLimit, cCommitTags);
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -135,6 +150,7 @@ namespace CVS_History_Viewer
         private void UpdateCommits_BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             List<CVSFile> cOutDatedFiles = new List<CVSFile>();
+            List<CVSFile> cTempFileList = cFiles;
             UpdateProgress oProgress = new UpdateProgress();
 
             //Get List of all Files in the root
@@ -149,22 +165,29 @@ namespace CVS_History_Viewer
             foreach (FileInfo oFileInfo in cFileInfos)
             {
                 bool bFound = false;
-                foreach (CVSFile oFile in cFiles)
+                for(int i = cTempFileList.Count - 1; i >= 0; i--)
                 {
-                    if (oFile.sName == oFileInfo.Name && oFile.sPath == oFileInfo.DirectoryName)
+                    if (cTempFileList[i].sName == oFileInfo.Name && cTempFileList[i].sPath == oFileInfo.DirectoryName)
                     {
                         bFound = true;
 
-                        if (oFile.dLastUpdated < oFileInfo.LastWriteTime.AddTicks(-oFileInfo.LastWriteTime.Ticks % TimeSpan.TicksPerSecond))
+                        if (cTempFileList[i].dLastUpdated < oFileInfo.LastWriteTime.AddTicks(-oFileInfo.LastWriteTime.Ticks % TimeSpan.TicksPerSecond)
+                            && !cTempFileList[i].bIgnored)
                         {
-                            oFile.dLastUpdated = oFileInfo.LastWriteTime;
-                            oFile.bDeleted = false;
-                            cOutDatedFiles.Add(oFile);
+                            cTempFileList[i].dLastUpdated = oFileInfo.LastWriteTime;
+                            cTempFileList[i].bDeleted = false;
+                            cOutDatedFiles.Add(cTempFileList[i]);
                             oProgress.iTotal = cOutDatedFiles.Count;
-                            oUpdateCommitsWorker.ReportProgress(0, oProgress);
+                            oUpdateCommitsWorker.ReportProgress(0, oProgress);                            
                         }
 
+                        cTempFileList.RemoveAt(i);
                         break;
+                    }
+
+                    if (oUpdateCommitsWorker.CancellationPending)
+                    {
+                        return;
                     }
                 }
 
@@ -177,7 +200,7 @@ namespace CVS_History_Viewer
             }
 
             //Look for deleted files (files known to the DB, but not findable in the directory)
-            foreach (CVSFile oFile in cFiles)
+            foreach (CVSFile oFile in cTempFileList)
             {
                 bool bFound = false;
                 foreach (FileInfo oFileInfo in cFileInfos)
@@ -223,6 +246,7 @@ namespace CVS_History_Viewer
         {
             UpdateProgress oProgress = (UpdateProgress)e.UserState;
             this.uiUpdateCounter.Content = $"{oProgress.iDone} of {oProgress.iTotal}";
+            this.uiUpdateProgress.Value = Math.Round((double)oProgress.iDone * 100 / oProgress.iTotal, 0);
 
             if(oProgress.iDone == 1)
             {
@@ -247,16 +271,21 @@ namespace CVS_History_Viewer
 
             this.uiProgress.Visibility = Visibility.Collapsed;
             this.uiOverlay.Visibility = Visibility.Collapsed;
+            this.uiCancelUpdate.IsEnabled = true;
         }
 
         private void FetchNewCommitsFromCVS(CVSFile oFile)
         {
             List<Commit> cNewCommits = CVSCalls.GetCommits(oFile, cTags);
 
-            if(cNewCommits.Count == 0)
+            if((cNewCommits.Count == 0 || oDatabase.GetRevisionCount(oFile) == cNewCommits.Count) && !oFile.bIgnored)
             {
-                //Save file, so that it won't be scanned again (unless it was updated of course).
-                oFile.bDeleted = false;
+                //This file has no (new) commits, maybe they are still pending. Skip saving this to the database.
+                //Next refresh might show a different result.
+                return;
+            }else if(oFile.bIgnored)
+            {
+                //This file needs to be marked as ignored, to not be checked again next time.
                 oDatabase.SaveFile(oFile);
                 return;
             }
@@ -290,42 +319,46 @@ namespace CVS_History_Viewer
         {
             string sText = this.uiSearchText.Text.ToLower().Replace('*', '%') + " ";
             
-            Match oMatch;
+            MatchCollection cMatches;
             List<KeyValuePair<string, object>> cPairs = new List<KeyValuePair<string, object>>();
 
             Dictionary<string, string> cPatterns = new Dictionary<string, string>
             {
-                { "filename", "file:[ ]{0,1}(.+?)[ ]{1}" },
+                { "files.name", "file:[ ]{0,1}(.+?)[ ]{1}" },
                 { "author", "author:[ ]{0,1}(.+?)[ ]{1}" },
                 { "hash", "commit:[ ]{0,1}(.+?)[ ]{1}" },
                 { "date", "date:[ ]{0,1}(.+?)[ ]{1}" },
                 { "from", "from:[ ]{0,1}(.+?)[ ]{1}" },
-                { "to", "to:[ ]{0,1}(.+?)[ ]{1}" }
+                { "to", "to:[ ]{0,1}(.+?)[ ]{1}" },
+                { "limit", "limit:[ ]{0,1}([0-9]+?)[ ]{1}" }
             };
 
             foreach (KeyValuePair<string, string> oPattern in cPatterns)
             {
-                oMatch = new Regex(oPattern.Value).Match(sText);
+                cMatches = new Regex(oPattern.Value).Matches(sText);
 
-                if (oMatch.Groups[1].ToString() != "")
+                foreach(Match oMatch in cMatches)
                 {
-                    if(oPattern.Key == "date" || oPattern.Key == "from" || oPattern.Key == "to")
+                    if (oMatch.Groups[1].ToString() != "")
                     {
-                        try
+                        if (oPattern.Key == "date" || oPattern.Key == "from" || oPattern.Key == "to")
                         {
-                            cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, DateTime.Parse(oMatch.Groups[1].ToString())));
+                            try
+                            {
+                                cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, DateTime.Parse(oMatch.Groups[1].ToString())));
+                            }
+                            catch (Exception)
+                            {
+                                //do nothing - just a bad date.
+                            }
                         }
-                        catch (Exception)
+                        else
                         {
-                            //do nothing - just a bad date.
+                            cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, oMatch.Groups[1].ToString()));
                         }
-                    }
-                    else
-                    {
-                        cPairs.Add(new KeyValuePair<string, object>(oPattern.Key, oMatch.Groups[1].ToString()));
-                    }
 
-                    sText = sText.Replace(oMatch.Value, "");
+                        sText = sText.Replace(oMatch.Value, "");
+                    }
                 }
             }
 
@@ -335,6 +368,7 @@ namespace CVS_History_Viewer
             }
 
             string sWhere = "";
+            string sLimit = "";
 
             foreach(KeyValuePair<string, object> oPair in cPairs)
             {
@@ -349,16 +383,51 @@ namespace CVS_History_Viewer
                     case "to":
                         sWhere += $" AND strftime('%Y-%m-%d', date) <= '{((DateTime)oPair.Value).ToString("yyyy-MM-dd")}'";
                         break;
-                    case "author":
-                    case "filename":
-                    case "hash":
                     case "description":
                         sWhere += $" AND {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}'";
+                        break;
+                    case "limit":
+                        sLimit = " LIMIT " + oPair.Value;
                         break;
                 }
             }
 
-            LoadFromDB(sWhere);
+            //Author, filename and hash need to be OR connected
+            Dictionary<string, string> cSubWheres = new Dictionary<string, string>
+            {
+                { "files.name", "" },
+                { "author", "" },
+                { "hash", "" }
+            };
+
+            foreach (KeyValuePair<string, object> oPair in cPairs)
+            {
+                switch (oPair.Key)
+                {
+                    case "files.name":
+                    case "author":
+                    case "hash":
+                        if (cSubWheres[oPair.Key] != "")
+                        {
+                            cSubWheres[oPair.Key] += $" OR {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash")? "%":"")}'";
+                        }
+                        else
+                        {
+                            cSubWheres[oPair.Key] += $"{oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash") ? "%" : "")}'";
+                        }
+                        break;
+                }                
+            }
+
+            foreach(KeyValuePair<string, string> oSubWhere in cSubWheres)
+            {
+                if (oSubWhere.Value != "")
+                {
+                    sWhere += " AND (" + oSubWhere.Value + ")";
+                }
+            }
+
+            LoadFromDB(sWhere, sLimit);
 
             //Create & Show UI Commit list
             this.uiCommits.ItemsSource = cCommits;
@@ -369,6 +438,14 @@ namespace CVS_History_Viewer
         {
             if(this.uiCommits.SelectedItem == null)
             {
+                this.uiCommitHASH.Text = "";
+                this.uiCommitAuthor.Text = "";
+                this.uiCommitDate.Text = "";
+                this.uiCommitDescription.Text = "";
+
+                this.uiCommitRevisions.Items.Clear();
+                this.uiDiffView.Children.Clear();
+
                 return;
             }            
 
@@ -439,6 +516,18 @@ namespace CVS_History_Viewer
             this.uiCVSMissing.Visibility = Visibility.Visible;
         }
 
+        private void ShowLoadingData()
+        {
+            this.uiOverlay.Visibility = Visibility.Visible;
+            this.uiLoadingData.Visibility = Visibility.Visible;
+        }
+
+        private void HideLoadingData()
+        {
+            this.uiOverlay.Visibility = Visibility.Collapsed;
+            this.uiLoadingData.Visibility = Visibility.Collapsed;
+        }
+
         private void WelcomeButton_Click(object sender, RoutedEventArgs e)
         {
             ChooseDirectory_Click(null, null);
@@ -461,7 +550,7 @@ namespace CVS_History_Viewer
 
         private void License_Click(object sender, RoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start(System.AppDomain.CurrentDomain.BaseDirectory + "MIT License.txt");
+            System.Diagnostics.Process.Start(System.AppDomain.CurrentDomain.BaseDirectory + "LICENSE.txt");
         }
 
         private void ThirdPartyLicenses_Click(object sender, RoutedEventArgs e)
@@ -497,6 +586,13 @@ namespace CVS_History_Viewer
             }
 
             Revision oRevision = (Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag;           
+            
+            if(oRevision.iWhitespace != oSettings.iWhitespace)
+            {
+                oDatabase.DeleteDiffLines(oRevision);
+                oRevision.cDiffBlocks.Clear();
+                oRevision.iWhitespace = oSettings.iWhitespace;
+            }
 
             if (oRevision.cDiffBlocks.Count > 0)
             {
@@ -521,6 +617,8 @@ namespace CVS_History_Viewer
             int iBlock = 1;
             foreach (DiffBlock oDiffBlock in oRevision.cDiffBlocks)
             {
+                int iPadLength = oRevision.cDiffBlocks[oRevision.cDiffBlocks.Count - 1].iEndLine.ToString().Length;
+
                 if(oDiffBlock.cDiffLines.Count == 0)
                 {
                     if(this.uiDiffView.Children.Count == 0)
@@ -551,13 +649,27 @@ namespace CVS_History_Viewer
                     int iLine = oDiffBlock.iStartLine;
                     foreach (DiffBlock.LineChange oChange in oDiffBlock.cLines)
                     {
-                        oDiffBlock.cDiffLines.Add(new TextBlock()
+                        TextBlock oTextBlock = new TextBlock();
+
+                        switch (oChange.sAction)
                         {
-                            Background = (oChange.sAction == "+") ? (Brush)new BrushConverter().ConvertFromString("#FFDDFFDD")
-                                                                  : (Brush)new BrushConverter().ConvertFromString("#FFFEE8E9"),
-                            Foreground = Brushes.Black,
-                            Text = $"{((oChange.sAction == "+") ? iLine++.ToString() : "#")} {oChange.sAction} {oChange.sLine}"
-                        });
+                            case "+":
+                                oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFDDFFDD");
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                break;
+                            case "-":
+                                oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFFEE8E9");
+                                oTextBlock.Text = $"{"#".PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                break;
+                            default:
+                                oTextBlock.Background = Brushes.White;
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')}   {oChange.sLine}";
+                                break;
+                        }
+
+                        oTextBlock.FontFamily = new FontFamily("Consolas");
+                        oTextBlock.Foreground = Brushes.Black;
+                        oDiffBlock.cDiffLines.Add(oTextBlock);
 
                         this.uiDiffView.Children.Add(oDiffBlock.cDiffLines[oDiffBlock.cDiffLines.Count - 1]);
                     }

@@ -149,10 +149,10 @@
     <Resource Include="Resources\External\Font-Awesome\LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="MIT License.txt">
+    <Resource Include="Resources\Images\Icon.ico" />
+    <Content Include="LICENSE.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Resources\Images\Icon.ico" />
     <Content Include="Third Party Licenses.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

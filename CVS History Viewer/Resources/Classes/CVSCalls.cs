@@ -53,6 +53,7 @@ namespace CVS_History_Viewer.Resources.Classes
             if (sTest.Contains("CVS\\Repository") || sTest.Contains("CVS\\Root") || sTest.Contains("CVS\\Entries") || sTest.Contains("CVS\\Baserev"))
             {
                 Console.WriteLine($"Ignored: {oFile.sPath}\\{oFile.sName}");
+                oFile.bIgnored = true;
                 return cCommits;
             }
 
@@ -293,17 +294,18 @@ namespace CVS_History_Viewer.Resources.Classes
             }
             else
             {
-                oRevision = CVSCalls.GetDiffPrevious(oRevision);
+                oRevision = CVSCalls.GetDiffPrevious(oRevision, oRevision.iWhitespace);
             }
             
             return oRevision;
         }
 
-        private static Revision GetDiffPrevious(Revision oRevision)
+        private static Revision GetDiffPrevious(Revision oRevision, int iWhitespace)
         {
             int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
             string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
-             
+            
+            List<string> cWhitespace = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
             List<string> cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs diff -r {oRevision.sRevision} -r {sPrevRevision} \"{oRevision.oFile.sName}\"");
 
             DiffBlock oDiffBlock = new DiffBlock();
@@ -318,7 +320,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 }else if (cLines[i].Substring(0,1) == "<")
                 {
                     oChange.sAction = "+";
-                    oChange.sLine = cLines[i].Substring(1, cLines[i].Length - 1);
+                    oChange.sLine = cLines[i].Substring(2, cLines[i].Length - 2);
                     oDiffBlock.cLines.Add(oChange);
                 }else if (cLines[i].Substring(0, 1) == ">")
                 {
@@ -335,7 +337,7 @@ namespace CVS_History_Viewer.Resources.Classes
                             break;
                     }
 
-                    oChange.sLine = cLines[i].Substring(1, cLines[i].Length - 1);
+                    oChange.sLine = cLines[i].Substring(2, cLines[i].Length - 2);
                     oDiffBlock.cLines.Add(oChange);
 
                 }
@@ -349,6 +351,7 @@ namespace CVS_History_Viewer.Resources.Classes
 
                     if(oDiffBlock.cLines.Count != 0)
                     {
+                        oDiffBlock.sBlockKind = sBlockKind;
                         oRevision.cDiffBlocks.Add(oDiffBlock);
                     }
                     oDiffBlock = new DiffBlock();
@@ -358,7 +361,53 @@ namespace CVS_History_Viewer.Resources.Classes
                 }
             }
 
+            oDiffBlock.sBlockKind = sBlockKind;
             oRevision.cDiffBlocks.Add(oDiffBlock);
+
+            //Combine blocks that are close to each other and add whitespace as needed.
+            bool bMergeRequired = false;
+            DiffBlock oMergeInto = oRevision.cDiffBlocks[oRevision.cDiffBlocks.Count - 1];
+            for (int i = oRevision.cDiffBlocks.Count - 1; i >= 0; i--)
+            {
+                if (bMergeRequired)
+                {
+                    foreach(DiffBlock.LineChange oLineChange in oRevision.cDiffBlocks[i].cLines)
+                    {
+                        oMergeInto.cLines.Insert(0, oLineChange);
+                    }
+                    oMergeInto.iStartLine = oRevision.cDiffBlocks[i].iStartLine;
+                    oMergeInto.sBlockKind = oRevision.cDiffBlocks[i].sBlockKind;
+                    oRevision.cDiffBlocks.RemoveAt(i);
+                }
+                else
+                {
+                    //No merge means that the block needs bottom whitespace.
+                    oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, (oRevision.cDiffBlocks[i].sBlockKind == "a") ? true : false, 2);
+                }
+
+                if(i - 1 >= 0)
+                {
+                    int iDiff = oRevision.cDiffBlocks[i].iStartLine - oRevision.cDiffBlocks[i - 1].iEndLine - 1;
+                    if(iDiff < iWhitespace * 2)
+                    {
+                        bMergeRequired = true;
+                        oMergeInto = oRevision.cDiffBlocks[i];
+                        oMergeInto = AddWhitespace(oMergeInto, cWhitespace, iDiff, (oMergeInto.sBlockKind == "a") ? true : false, 1);
+                    }
+                    else
+                    {
+                        //it seems that the next block is far enough to treat them separately. Add max top whitespace.
+                        bMergeRequired = false;
+                        oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, (oRevision.cDiffBlocks[i].sBlockKind == "a") ? true : false, 1);
+                    }
+                }
+                else
+                {
+                    //This is the top-most block in the list, so we need to add max top whitespace.
+                    oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, (oRevision.cDiffBlocks[i].sBlockKind == "a") ? true : false, 1);
+                    break;
+                }
+            }
 
             return oRevision;
         }
@@ -394,10 +443,62 @@ namespace CVS_History_Viewer.Resources.Classes
                 cChanges.Add(oLineChange);
             }
 
-            oDiffBlock.cLines = cChanges;
+            oDiffBlock.cLines = cChanges;            
             oRevision.cDiffBlocks.Add(oDiffBlock);
+            oRevision.sLinesChanged = (oRevision.sState != "dead") ? $"+{cLines.Count} -0" : $"+0 -{cLines.Count}";
 
             return oRevision;
+        }
+
+        private static DiffBlock AddWhitespace(DiffBlock oDiffBlock, List<string> cWhitespace, int iWhitespace, bool bDeletion = false, int iMode = 3)
+        {
+            //iMode 1 = Only Top
+            //iMode 2 = Only Bottom
+            //iMode 3 = Both
+
+            if(iMode == 1 || iMode == 3)
+            {
+                //Top Whitespace
+                int iNewLine = oDiffBlock.iStartLine;
+                //When it's a deletion, then the "Startline" is the first line that we need as whitespace, where in any other case we would go for the line above that.
+                //Keep in mind that the corresponding whitespace list index is always - 1.
+                for (int j = oDiffBlock.iStartLine - ((bDeletion) ? 1 : 2); j >= oDiffBlock.iStartLine + ((bDeletion) ? 1 : 0) - iWhitespace - 1; j--)
+                {
+                    if (j >= 0)
+                    {
+                        oDiffBlock.cLines.Insert(0, new DiffBlock.LineChange() { sAction = "*", sLine = cWhitespace[j] });
+                        iNewLine = j + 1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                oDiffBlock.iStartLine = iNewLine;
+            }
+
+            if (iMode == 2 || iMode == 3)
+            {
+                //Bottom Whitespace
+                int iNewLine = oDiffBlock.iEndLine;
+                for (int j = oDiffBlock.iEndLine; j <= oDiffBlock.iEndLine + iWhitespace - 1; j++)
+                {
+                    if (j <= cWhitespace.Count - 1)
+                    {
+                        oDiffBlock.cLines.Add(new DiffBlock.LineChange() { sAction = "*", sLine = cWhitespace[j] });
+                        iNewLine = j + 1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                oDiffBlock.iEndLine = iNewLine;
+            }               
+
+            return oDiffBlock;
         }
     }
 }
