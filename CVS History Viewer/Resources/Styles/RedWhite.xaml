@@ -49,18 +49,18 @@
                         </Border>
                         <TextBlock Name="Title" Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Title}"   
                                VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White"  
-                               Margin="20,2,0,0"/>
-                        <Image Name="Icon" Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Icon}"  
+                               Margin="60,2,0,0"/>
+                        <!--<Image Name="Icon" Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Icon}"  
                            VerticalAlignment="Top" HorizontalAlignment="Left"  
                            Margin="2,3,0,0"   
                            Width="15"  
-                           shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                           shell:WindowChrome.IsHitTestVisibleInChrome="True"/>-->
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="WindowState" Value="Maximized">
                             <Setter TargetName="OuterBorder" Property="BorderThickness" Value="6"/>
-                            <Setter TargetName="Title" Property="Margin" Value="26,8,0,0"/>
-                            <Setter TargetName="Icon" Property="Margin" Value="9,10,0,0"/>
+                            <Setter TargetName="Title" Property="Margin" Value="66,8,0,0"/>
+                            <!--<Setter TargetName="Icon" Property="Margin" Value="9,10,0,0"/>-->
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
