@@ -55,8 +55,6 @@
             </StackPanel>
         </Grid>
 
-        <Image Grid.Row="0" Grid.RowSpan="2" Source="Resources/Images/Icon.ico" HorizontalAlignment="Left" VerticalAlignment="Top" Height="50" />
-
         <!--Main Grid-->
         <Grid Grid.Row="2">
 
@@ -227,7 +225,9 @@
             </ContentControl>
 
         </Grid>
-        
+
+        <Image Grid.Row="0" Grid.RowSpan="2" Source="Resources/Images/Icon.ico" HorizontalAlignment="Left" VerticalAlignment="Top" Height="50" />
+
     </Grid>
     
 </Window>
