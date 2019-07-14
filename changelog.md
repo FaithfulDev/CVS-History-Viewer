@@ -1,5 +1,9 @@
 # CVS History Viewer Changelog
 
+## v1.1.0 (Unreleased)
+### New Features
+* (#30) Quick Diff View now got syntax highlighting!
+
 ## v1.0.2 (Released 2019/05/21)
 ### Improvements
 * (#7) Ignored files (any CVS related ones) will now only be checked once and then never again.
