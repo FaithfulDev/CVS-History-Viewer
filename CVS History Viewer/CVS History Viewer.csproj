@@ -49,6 +49,9 @@
     <Reference Include="Microsoft.WindowsAPICodePack.ShellExtensions, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.WindowsAPICodePack-Shell.1.1.0.0\lib\Microsoft.WindowsAPICodePack.ShellExtensions.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.110.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
@@ -84,6 +87,7 @@
     <Compile Include="Resources\Classes\JSONParser.cs" />
     <Compile Include="Resources\Classes\Revision.cs" />
     <Compile Include="Resources\Classes\Settings.cs" />
+    <Compile Include="Resources\Classes\SyntaxHighlighting.cs" />
     <Compile Include="Resources\Classes\Tag.cs" />
     <Compile Include="Resources\Windows\CrashReport.xaml.cs">
       <DependentUpon>CrashReport.xaml</DependentUpon>
@@ -138,6 +142,12 @@
     <None Include="Resources\External\Font-Awesome\metadata\shims.json" />
     <None Include="Resources\External\Font-Awesome\metadata\shims.yml" />
     <None Include="Resources\External\Font-Awesome\metadata\sponsors.yml" />
+    <Content Include="Resources\Syntax\html.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Syntax\js.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Resource Include="Resources\External\Font-Awesome\otfs\Font Awesome 5 Brands-Regular-400.otf" />
     <Resource Include="Resources\External\Font-Awesome\otfs\Font Awesome 5 Free-Regular-400.otf" />
     <Resource Include="Resources\External\Font-Awesome\otfs\Font Awesome 5 Free-Solid-900.otf" />

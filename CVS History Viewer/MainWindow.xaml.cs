@@ -20,10 +20,12 @@ namespace CVS_History_Viewer
     public partial class MainWindow : Window
     {
         private string sAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\CVS History Viewer";
+        private string sSyntaxPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "\\Resources\\Syntax";
 
         private Database oDatabase;
         private Settings oSettings;
         private BackgroundStuff oBackgroundStuff;
+        private SyntaxHighlighting oSyntaxHighlighting;
 
         private BackgroundWorker oUpdateCommitsWorker;
 
@@ -45,6 +47,7 @@ namespace CVS_History_Viewer
 
             oDatabase = new Database(sAppDataPath);
             oSettings = new Settings(sAppDataPath);
+            oSyntaxHighlighting = new SyntaxHighlighting(sSyntaxPath);
 
             oBackgroundStuff = new BackgroundStuff(oDatabase);
             oBackgroundStuff.OnDiffCompleted += BackgroundStuff_DiffCompleted;
@@ -614,6 +617,8 @@ namespace CVS_History_Viewer
             //Load Diff Block(s) into view.
             this.uiDiffView.Children.Clear();
 
+            string sFileExtension = Path.GetExtension(oRevision.oFile.sName).Replace(".", "");
+
             int iBlock = 1;
             foreach (DiffBlock oDiffBlock in oRevision.cDiffBlocks)
             {
@@ -655,20 +660,23 @@ namespace CVS_History_Viewer
                         {
                             case "+":
                                 oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFDDFFDD");
-                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')} {oChange.sAction} ";
                                 break;
                             case "-":
                                 oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFFEE8E9");
-                                oTextBlock.Text = $"{"#".PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                oTextBlock.Text = $"{"#".PadLeft(iPadLength, ' ')} {oChange.sAction} ";
                                 break;
                             default:
                                 oTextBlock.Background = Brushes.White;
-                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')}   {oChange.sLine}";
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')}   ";
                                 break;
                         }
 
                         oTextBlock.FontFamily = new FontFamily("Consolas");
                         oTextBlock.Foreground = Brushes.Black;
+                        
+                        oTextBlock.Inlines.AddRange(oSyntaxHighlighting.ParseSyntax(oChange.sLine, sFileExtension));
+
                         oDiffBlock.cDiffLines.Add(oTextBlock);
 
                         this.uiDiffView.Children.Add(oDiffBlock.cDiffLines[oDiffBlock.cDiffLines.Count - 1]);
