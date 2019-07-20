@@ -371,9 +371,9 @@ namespace CVS_History_Viewer.Resources.Classes
             {
                 if (bMergeRequired)
                 {
-                    foreach(DiffBlock.LineChange oLineChange in oRevision.cDiffBlocks[i].cLines)
+                    for(int j = oRevision.cDiffBlocks.Count - 1; j >= 0; j--)
                     {
-                        oMergeInto.cLines.Insert(0, oLineChange);
+                        oMergeInto.cLines.Insert(0, oRevision.cDiffBlocks[i].cLines[j]);
                     }
                     oMergeInto.iStartLine = oRevision.cDiffBlocks[i].iStartLine;
                     oMergeInto.sBlockKind = oRevision.cDiffBlocks[i].sBlockKind;
