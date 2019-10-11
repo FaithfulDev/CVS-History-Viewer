@@ -6,13 +6,13 @@ Simply choose a directory and the app is going to scan all the CVS commits for a
 
 ## Search through all commits with some simple keywords!
 
-You can use a number ob simple keywords, to filter down the commits as much as you like.
+You can use a number of simple keywords, to filter down the commits as much as you like.
 
 ![Overview with keyword examples](doc/overview.png)
 
 | Keyword | Description | Example |
 | ------------- | ------------- | ------------ |
-| author  | Name of the one that commited the change. | author:Marcel |
+| author  | Name of the one that committed the change. | author:Marcel |
 | file  | Show commits related to this file name.  | file:readme.md |
 | date  | Show commits done on a specific day.  | date:24.09.2019 (use your regional date format) |
 | from  | Show commits starting from this date.  | |
