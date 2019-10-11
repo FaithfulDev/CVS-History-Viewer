@@ -12,6 +12,7 @@ You can use a number of simple keywords, to filter down the commits as much as y
 
 | Keyword | Description | Example |
 | ------------- | ------------- | ------------ |
+| commit | ID/hash of the commit. | commit:6EC569D |
 | author  | Name of the one that committed the change. | author:Marcel |
 | file  | Show commits related to this file name.  | file:readme.md |
 | date  | Show commits done on a specific day.  | date:24.09.2019 (use your regional date format) |
