@@ -4,7 +4,7 @@
 
 Simply choose a directory and the app is going to scan all the CVS commits for all files in that folder. Afterwards it will display everything in a git-like kind of way, meaning that the view is centered around commits and not file revision.
 
-The commit hashes are calculated using the commit's description, time and author. Therefore, those hashes will group all CVS-commits that belong together. The hashes are identical for the same commits for all users.
+That’s primarily done by calculating a commit hash, an artificial value combining the revisions description, time and author. These commit hashes will be the same for all revisions that have been committed together and since these three pieces of information are the same for all users, the hash is identical for all users as well.
 
 ## Search through all commits with some simple keywords!
 
