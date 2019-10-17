@@ -4,6 +4,8 @@
 
 Simply choose a directory and the app is going to scan all the CVS commits for all files in that folder. Afterwards it will display everything in a git-like kind of way, meaning that the view is centered around commits and not file revision.
 
+That’s primarily done by calculating a commit hash, an artificial value combining the revisions description, time and author. These commit hashes will be the same for all revisions that have been committed together and since these three pieces of information are the same for all users, the hash is identical for all users as well.
+
 ## Search through all commits with some simple keywords!
 
 You can use a number of simple keywords, to filter down the commits as much as you like.
@@ -12,6 +14,7 @@ You can use a number of simple keywords, to filter down the commits as much as y
 
 | Keyword | Description | Example |
 | ------------- | ------------- | ------------ |
+| commit | ID/hash of the commit. | commit:6EC569D |
 | author  | Name of the one that committed the change. | author:Marcel |
 | file  | Show commits related to this file name.  | file:readme.md |
 | date  | Show commits done on a specific day.  | date:24.09.2019 (use your regional date format) |
