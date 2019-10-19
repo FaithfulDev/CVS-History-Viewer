@@ -483,6 +483,7 @@ namespace CVS_History_Viewer
 
                 oItem.Content = $"  {oRevision.oFile.sName } {oRevision.sRevision}";
                 oItem.Tag = oRevision;
+                oItem.ToolTip = oRevision.oFile.sPath + "\\" + oRevision.oFile.sName;
                 
                 this.uiCommitRevisions.Items.Add(oItem);
             }
