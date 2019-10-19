@@ -85,7 +85,7 @@
                         <DataGridTemplateColumn Header="Date" Width="SizeToCells" MinWidth="70">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding dDate, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"/>
+                                    <TextBlock Text="{Binding dLocalDate, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

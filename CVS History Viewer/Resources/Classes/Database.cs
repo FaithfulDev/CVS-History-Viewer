@@ -352,6 +352,7 @@ namespace CVS_History_Viewer.Resources.Classes
                                 {
                                     iID = int.Parse(oReader["ID"].ToString()),
                                     dDate = (DateTime)oReader["Date"],
+                                    dLocalDate = ((DateTime)oReader["Date"]).ToLocalTime(),
                                     sAuthor = oReader["Author"].ToString(),
                                     sDescription = oReader["Description"].ToString(),
                                     sHASH = oReader["HASH"].ToString(),
