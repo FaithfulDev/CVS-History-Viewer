@@ -202,6 +202,13 @@ namespace CVS_History_Viewer.Resources.Classes
                                 );", oSQLiteConnection).ExecuteNonQuery();
                 }
 
+                new SQLiteCommand(@"CREATE INDEX IF NOT EXISTS DiffLines_DiffBlockID ON DiffLines (DiffBlockID);"
+                                  , oSQLiteConnection).ExecuteNonQuery();
+                new SQLiteCommand(@"CREATE INDEX IF NOT EXISTS Commit_date_desc ON Commits (Date DESC, HASH ASC);"
+                                  , oSQLiteConnection).ExecuteNonQuery();
+                new SQLiteCommand(@"CREATE INDEX IF NOT EXISTS CommitTags_CommitID ON CommitTags (CommitID, TagID);"
+                                  , oSQLiteConnection).ExecuteNonQuery();
+
                 oSQLiteConnection.Close();
             }            
         }

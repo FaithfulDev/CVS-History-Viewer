@@ -8,6 +8,7 @@
 * (#31) UI will now restore the previous selected revision when going back to a previous selected commit.
 * (#35) If nothing was found using the search and the search term could be a commit hash without the "commit:" keyword, an automatic follow up search is triggered, treating the search term as a commit hash.
 * (#37) Revision entries (bottom-left list) now show the file path in the tooltip.
+* (#40) Big search performance improvements due to some database optimizations.
 ### Bugfix
 * (#22) Whitespace setting is now read from settings file. At some point in time there will be a way to change it via the UI, but for now you have to change it in the settings file (see local appdata folder).
 * (#23) Search limit is now always applied, not just in the inital load. This should improve search performance on general searches (e.g. no or very few filter) **drastically**!
