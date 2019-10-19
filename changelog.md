@@ -3,9 +3,15 @@
 ## v1.1.0 (Unreleased)
 ### New Features
 * (#30) Quick Diff View now got syntax highlighting!
-
+### Improvements
+* (#31) UI will now restore the previous selected revision when going back to a previous selected commit.
+* (#37) Revision entries (bottom-left list) now show the file path in the tooltip.
 ### Bugfix
+* (#22) Whitespace setting is now read from settings file. At some point in time there will be a way to change it via the UI, but for now you have to change it in the settings file (see local appdata folder).
+* (#23) Search limit is now always applied, not just in the inital load. This should improve search performance on general searches (e.g. no or very few filter) **drastically**!
+* (#28) Commit time is now converted to local time. Before it was shown in UTC, the way CVS logs it.
 * (#29) Fixed a bug that would reverse diff lines whenever 2 blocks are merged.
+* (#38) Double-click in the revison list will now only respond if a revision was targeted. Before it would use whatever revision was previously selected.
 * (#39) Fixed a crash that would happend, whenever trying to refresh from a folder that was deleted.
 
 ## v1.0.2 (Released 2019/05/21)
