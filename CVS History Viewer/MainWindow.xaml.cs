@@ -435,7 +435,14 @@ namespace CVS_History_Viewer
                 }
             }
 
-            LoadFromDB(sWhere, sLimit);
+            if (sLimit != "")
+            {
+                LoadFromDB(sWhere, sLimit);
+            }
+            else
+            {
+                LoadFromDB(sWhere);
+            }            
 
             //Create & Show UI Commit list
             this.uiCommits.ItemsSource = cCommits;
