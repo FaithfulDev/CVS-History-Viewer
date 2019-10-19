@@ -11,6 +11,13 @@ namespace CVS_History_Viewer.Resources.Classes
     {
         private static List<string> RunCommand(string sPath, string sCommand)
         {
+            List<string> cLines = new List<string>();
+
+            if (!Directory.Exists(sPath))
+            {
+                return cLines;
+            }
+
             System.Diagnostics.Process oProcess = new System.Diagnostics.Process();
 
             oProcess.StartInfo.FileName = "cmd.exe";
@@ -24,8 +31,6 @@ namespace CVS_History_Viewer.Resources.Classes
             string sOutput = oProcess.StandardOutput.ReadToEnd();
 
             oProcess.WaitForExit();
-
-            List<string> cLines = new List<string>();
 
             using (StringReader oReader = new StringReader(sOutput))
             {

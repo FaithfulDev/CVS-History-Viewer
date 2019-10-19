@@ -140,6 +140,11 @@ namespace CVS_History_Viewer
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
+            if (!Directory.Exists(oSettings.sRootDirectory))
+            {
+                return;
+            }
+
             this.uiUpdateState.Content = "Initializing";
             this.uiUpdateCounter.Content = "0 of 0";
             this.uiUpdateProgress.Value = 0;
@@ -279,6 +284,14 @@ namespace CVS_History_Viewer
 
         private void FetchNewCommitsFromCVS(CVSFile oFile)
         {
+            if (!Directory.Exists(oFile.sPath))
+            {
+                //This file is in a directory that was deleted. We can't get to it's commits anymore.
+                //File is already marked as "deleted", update in DB to prevent further checks.
+                oDatabase.SaveFile(oFile);
+                return;
+            }
+
             List<Commit> cNewCommits = CVSCalls.GetCommits(oFile, cTags);
 
             if((cNewCommits.Count == 0 || oDatabase.GetRevisionCount(oFile) == cNewCommits.Count) && !oFile.bIgnored)
