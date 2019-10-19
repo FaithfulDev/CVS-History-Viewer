@@ -207,22 +207,12 @@ namespace CVS_History_Viewer
                 }
             }
 
-            //Look for deleted files (files known to the DB, but not findable in the directory)
+            //Look for newly deleted files (files known to the DB, not already marked as deleted, but not findable in the directory)
             foreach (CVSFile oFile in cTempFileList)
             {
-                bool bFound = false;
-                foreach (FileInfo oFileInfo in cFileInfos)
+                if (!oFile.bDeleted)
                 {
-                    if (oFile.sName == oFileInfo.Name && oFile.sPath == oFileInfo.DirectoryName)
-                    {
-                        bFound = true;
-                        break;
-                    }
-                }
-
-                if (!bFound)
-                {
-                    if (!oFile.bDeleted)
+                    if (!File.Exists(oFile.sPath + "\\" + oFile.sName))
                     {
                         //For future checks the file will be marked as deleted...
                         oFile.bDeleted = true;
