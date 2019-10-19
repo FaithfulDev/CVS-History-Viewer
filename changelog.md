@@ -6,6 +6,7 @@
 
 ### Bugfix
 * (#29) Fixed a bug that would reverse diff lines whenever 2 blocks are merged.
+* (#39) Fixed a crash that would happend, whenever trying to refresh from a folder that was deleted.
 
 ## v1.0.2 (Released 2019/05/21)
 ### Improvements
