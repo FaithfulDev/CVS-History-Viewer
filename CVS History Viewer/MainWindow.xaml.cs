@@ -706,7 +706,7 @@ namespace CVS_History_Viewer
                         oTextBlock.FontFamily = new FontFamily("Consolas");
                         oTextBlock.Foreground = Brushes.Black;
                         
-                        oTextBlock.Inlines.AddRange(oSyntaxHighlighting.ParseSyntax(oChange.sLine, sFileExtension));
+                        oTextBlock.Inlines.AddRange(oSyntaxHighlighting.ParseSyntax(oChange.sLine.Replace("\t", oSettings.sTab), sFileExtension));
 
                         oDiffBlock.cDiffLines.Add(oTextBlock);
 

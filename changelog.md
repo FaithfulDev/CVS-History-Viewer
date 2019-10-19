@@ -4,6 +4,7 @@
 ### New Features
 * (#30) Quick Diff View now got syntax highlighting!
 ### Improvements
+* (#27) Tabs are now converted to spaces (default 4). This can be modifed via setting file.
 * (#31) UI will now restore the previous selected revision when going back to a previous selected commit.
 * (#37) Revision entries (bottom-left list) now show the file path in the tooltip.
 ### Bugfix
