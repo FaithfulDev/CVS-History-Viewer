@@ -325,8 +325,13 @@ namespace CVS_History_Viewer
 
         private void Search_Click(object sender, RoutedEventArgs e)
         {
-            string sText = this.uiSearchText.Text.ToLower().Replace('*', '%') + " ";
-            
+            Search(this.uiSearchText.Text.ToLower().Replace('*', '%') + " ");            
+        }
+
+        private void Search(string sText, bool bFolowUpSearch = false)
+        {
+            string sOriginalText = sText;
+
             MatchCollection cMatches;
             List<KeyValuePair<string, object>> cPairs = new List<KeyValuePair<string, object>>();
 
@@ -345,7 +350,7 @@ namespace CVS_History_Viewer
             {
                 cMatches = new Regex(oPattern.Value).Matches(sText);
 
-                foreach(Match oMatch in cMatches)
+                foreach (Match oMatch in cMatches)
                 {
                     if (oMatch.Groups[1].ToString() != "")
                     {
@@ -378,7 +383,7 @@ namespace CVS_History_Viewer
             string sWhere = "";
             string sLimit = "";
 
-            foreach(KeyValuePair<string, object> oPair in cPairs)
+            foreach (KeyValuePair<string, object> oPair in cPairs)
             {
                 switch (oPair.Key)
                 {
@@ -417,17 +422,17 @@ namespace CVS_History_Viewer
                     case "hash":
                         if (cSubWheres[oPair.Key] != "")
                         {
-                            cSubWheres[oPair.Key] += $" OR {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash")? "%":"")}'";
+                            cSubWheres[oPair.Key] += $" OR {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash") ? "%" : "")}'";
                         }
                         else
                         {
                             cSubWheres[oPair.Key] += $"{oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash") ? "%" : "")}'";
                         }
                         break;
-                }                
+                }
             }
 
-            foreach(KeyValuePair<string, string> oSubWhere in cSubWheres)
+            foreach (KeyValuePair<string, string> oSubWhere in cSubWheres)
             {
                 if (oSubWhere.Value != "")
                 {
@@ -442,11 +447,24 @@ namespace CVS_History_Viewer
             else
             {
                 LoadFromDB(sWhere);
-            }            
+            }
 
-            //Create & Show UI Commit list
-            this.uiCommits.ItemsSource = cCommits;
-            this.uiCommits.SelectedIndex = 0;
+            //We do a follow up search, if the search term could be non-key-worded commit hash.
+            if(cCommits.Count == 0 && 
+               !bFolowUpSearch && 
+               !sOriginalText.Trim().Contains(" ") && //Only 1 word
+               sOriginalText.Trim().Length <= 40 && //Maximum length of 40
+               !sOriginalText.Contains(":") && //No ":" in text, as it would be with key-worded searches
+               !sOriginalText.Contains("commit:")) //Not already as a commit hash key-worded before
+            {
+                Search("commit:" + sText, true);
+            }
+            else
+            {
+                //Create & Show UI Commit list
+                this.uiCommits.ItemsSource = cCommits;
+                this.uiCommits.SelectedIndex = 0;
+            }            
         }
 
         private void Commits_SelectionChanged(object sender, SelectionChangedEventArgs e)

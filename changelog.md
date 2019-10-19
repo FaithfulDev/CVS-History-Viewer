@@ -6,6 +6,7 @@
 ### Improvements
 * (#27) Tabs are now converted to spaces (default 4). This can be modifed via setting file.
 * (#31) UI will now restore the previous selected revision when going back to a previous selected commit.
+* (#35) If nothing was found using the search and the search term could be a commit hash without the "commit:" keyword, an automatic follow up search is triggered, treating the search term as a commit hash.
 * (#37) Revision entries (bottom-left list) now show the file path in the tooltip.
 ### Bugfix
 * (#22) Whitespace setting is now read from settings file. At some point in time there will be a way to change it via the UI, but for now you have to change it in the settings file (see local appdata folder).
