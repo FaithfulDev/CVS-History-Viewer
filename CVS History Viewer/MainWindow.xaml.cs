@@ -35,6 +35,8 @@ namespace CVS_History_Viewer
         private List<Commit> cCommits = new List<Commit>();
         private List<Commit> cDummy = new List<Commit>();
 
+        private Dictionary<string, int> PreviousRevisionSelection = new Dictionary<string, int>();
+
         private DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
 
         private bool bIssueOnLoad = true;
@@ -488,7 +490,13 @@ namespace CVS_History_Viewer
                 this.uiCommitRevisions.Items.Add(oItem);
             }
 
-            this.uiCommitRevisions.SelectedIndex = 0;
+            if (this.PreviousRevisionSelection.ContainsKey(oCommit.sHASH))
+            {
+                this.uiCommitRevisions.SelectedIndex = this.PreviousRevisionSelection[oCommit.sHASH];
+            }else
+            {
+                this.uiCommitRevisions.SelectedIndex = 0;
+            }            
         }
 
         private void SearchText_KeyUp(object sender, KeyEventArgs e)
@@ -577,6 +585,18 @@ namespace CVS_History_Viewer
             if (this.uiCommitRevisions.SelectedItem == null)
             {
                 return;
+            }
+
+            Revision oRevision = (Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag;
+            Commit oCommit = (Commit)this.uiCommits.SelectedItem;
+
+            if (this.PreviousRevisionSelection.ContainsKey(oCommit.sHASH))
+            {
+                this.PreviousRevisionSelection[oCommit.sHASH] = this.uiCommitRevisions.SelectedIndex;
+            }
+            else
+            {
+                this.PreviousRevisionSelection.Add(oCommit.sHASH, this.uiCommitRevisions.SelectedIndex);
             }
 
             this.uiDiffLoading.Visibility = Visibility.Visible;
