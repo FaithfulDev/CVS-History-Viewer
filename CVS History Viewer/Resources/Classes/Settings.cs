@@ -24,11 +24,13 @@ namespace CVS_History_Viewer.Resources.Classes
             }            
 
             sRootDirectory = (string)oJSONParser.GetValue("RootDirectory", null);
+            iWhitespace = (int)oJSONParser.GetValue("Whitespace", iWhitespace);
         }
 
         public void SaveSettings()
         {
             oJSONParser.SetValue("RootDirectory", sRootDirectory);
+            oJSONParser.SetValue("Whitespace", iWhitespace);
 
             oJSONParser.Save(sUserSettingsFilePath);
         }
