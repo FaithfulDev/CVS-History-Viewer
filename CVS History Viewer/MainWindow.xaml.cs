@@ -501,7 +501,7 @@ namespace CVS_History_Viewer
 
         private void CommitRevisions_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (this.uiCommitRevisions.SelectedItem != null)
+            if (this.uiCommitRevisions.SelectedItem != null && e.OriginalSource.GetType() == typeof(TextBlock))
             {
                 CVSFile oFile = ((Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag).oFile;
                 if(System.IO.File.Exists(oFile.sPath + "\\" + oFile.sName))
