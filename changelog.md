@@ -1,6 +1,6 @@
 # CVS History Viewer Changelog
 
-## v1.1.0 (Unreleased)
+## v1.1.0 (Released 2019/10/20)
 ### New Features
 * (#30) Quick Diff View now got syntax highlighting!
 ### Improvements
