@@ -1,0 +1,23 @@
+{
+    "lang":"html",
+    "extensions": ["html", "htm"],
+    "scopes": [
+        {
+            "name":"keywords",
+            "color":"#07C",
+            "patterns":
+            [
+                "(<[\/]{0,1}(html|body|head|title|h2))[^>]*(>)",
+                "(<[\/]{0,1}(div|h1|h3|h4))[^>]*(>)"
+            ]   
+        },
+        {
+            "name":"strings",
+            "color":"#e0a060",
+            "patterns":
+            [
+                "(\".*?\")"
+            ]   
+        }
+    ]    
+}

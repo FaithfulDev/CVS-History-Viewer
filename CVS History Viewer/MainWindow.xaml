@@ -10,9 +10,11 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="20"/>
-            <RowDefinition Height="40"/>
+            <RowDefinition Height="30"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
+
+        
 
         <!--Header Grid-->
         <Grid Grid.Row="0" Background="#c5013c">
@@ -46,10 +48,10 @@
             </StackPanel>
         </Grid>
         
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" Margin="50,0,0,0">
             <StackPanel Orientation="Horizontal" Margin="10,0,10,0">
-                <Button Name="uiChooseDirectory" Content="Choose Directory" Click="ChooseDirectory_Click" Height="25" Padding="10,0,10,0" Style="{StaticResource Button}"/>
-                <Button Name="uiRefresh" Content="Refresh" Click="Refresh_Click" Height="25" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
+                <Button Name="uiChooseDirectory" Content="Choose Directory" Click="ChooseDirectory_Click" Height="20" Padding="10,0,10,0" Style="{StaticResource Button}"/>
+                <Button Name="uiRefresh" Content="Refresh" Click="Refresh_Click" Height="20" Padding="10,0,10,0" Margin="5,0,0,0" Style="{StaticResource Button}"/>
             </StackPanel>
         </Grid>
 
@@ -83,7 +85,7 @@
                         <DataGridTemplateColumn Header="Date" Width="SizeToCells" MinWidth="70">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding dDate, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"/>
+                                    <TextBlock Text="{Binding dLocalDate, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -223,7 +225,9 @@
             </ContentControl>
 
         </Grid>
-        
+
+        <Image Grid.Row="0" Grid.RowSpan="2" Source="Resources/Images/Icon.ico" HorizontalAlignment="Left" VerticalAlignment="Top" Height="50" />
+
     </Grid>
     
 </Window>

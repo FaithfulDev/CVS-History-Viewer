@@ -1,0 +1,22 @@
+{
+    "lang":"js",
+    "extensions": ["js"],
+    "scopes": [
+        {
+            "name":"keywords",
+            "color":"#07C",
+            "patterns":
+            [
+                "(function)"
+            ]   
+        },
+        {
+            "name":"strings",
+            "color":"#e0a060",
+            "patterns":
+            [
+                "(\".*?\")"
+            ]   
+        }
+    ]    
+}

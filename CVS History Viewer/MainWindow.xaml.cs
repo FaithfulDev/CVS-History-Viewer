@@ -20,10 +20,12 @@ namespace CVS_History_Viewer
     public partial class MainWindow : Window
     {
         private string sAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\CVS History Viewer";
+        private string sSyntaxPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "\\Resources\\Syntax";
 
         private Database oDatabase;
         private Settings oSettings;
         private BackgroundStuff oBackgroundStuff;
+        private SyntaxHighlighting oSyntaxHighlighting;
 
         private BackgroundWorker oUpdateCommitsWorker;
 
@@ -32,6 +34,8 @@ namespace CVS_History_Viewer
         private List<CommitTag> cCommitTags = new List<CommitTag>();
         private List<Commit> cCommits = new List<Commit>();
         private List<Commit> cDummy = new List<Commit>();
+
+        private Dictionary<string, int> PreviousRevisionSelection = new Dictionary<string, int>();
 
         private DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
 
@@ -45,6 +49,7 @@ namespace CVS_History_Viewer
 
             oDatabase = new Database(sAppDataPath);
             oSettings = new Settings(sAppDataPath);
+            oSyntaxHighlighting = new SyntaxHighlighting(sSyntaxPath);
 
             oBackgroundStuff = new BackgroundStuff(oDatabase);
             oBackgroundStuff.OnDiffCompleted += BackgroundStuff_DiffCompleted;
@@ -137,6 +142,11 @@ namespace CVS_History_Viewer
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
         {
+            if (!Directory.Exists(oSettings.sRootDirectory))
+            {
+                return;
+            }
+
             this.uiUpdateState.Content = "Initializing";
             this.uiUpdateCounter.Content = "0 of 0";
             this.uiUpdateProgress.Value = 0;
@@ -199,22 +209,12 @@ namespace CVS_History_Viewer
                 }
             }
 
-            //Look for deleted files (files known to the DB, but not findable in the directory)
+            //Look for newly deleted files (files known to the DB, not already marked as deleted, but not findable in the directory)
             foreach (CVSFile oFile in cTempFileList)
             {
-                bool bFound = false;
-                foreach (FileInfo oFileInfo in cFileInfos)
+                if (!oFile.bDeleted)
                 {
-                    if (oFile.sName == oFileInfo.Name && oFile.sPath == oFileInfo.DirectoryName)
-                    {
-                        bFound = true;
-                        break;
-                    }
-                }
-
-                if (!bFound)
-                {
-                    if (!oFile.bDeleted)
+                    if (!File.Exists(oFile.sPath + "\\" + oFile.sName))
                     {
                         //For future checks the file will be marked as deleted...
                         oFile.bDeleted = true;
@@ -276,6 +276,14 @@ namespace CVS_History_Viewer
 
         private void FetchNewCommitsFromCVS(CVSFile oFile)
         {
+            if (!Directory.Exists(oFile.sPath))
+            {
+                //This file is in a directory that was deleted. We can't get to it's commits anymore.
+                //File is already marked as "deleted", update in DB to prevent further checks.
+                oDatabase.SaveFile(oFile);
+                return;
+            }
+
             List<Commit> cNewCommits = CVSCalls.GetCommits(oFile, cTags);
 
             if((cNewCommits.Count == 0 || oDatabase.GetRevisionCount(oFile) == cNewCommits.Count) && !oFile.bIgnored)
@@ -317,8 +325,13 @@ namespace CVS_History_Viewer
 
         private void Search_Click(object sender, RoutedEventArgs e)
         {
-            string sText = this.uiSearchText.Text.ToLower().Replace('*', '%') + " ";
-            
+            Search(this.uiSearchText.Text.ToLower().Replace('*', '%') + " ");            
+        }
+
+        private void Search(string sText, bool bFolowUpSearch = false)
+        {
+            string sOriginalText = sText;
+
             MatchCollection cMatches;
             List<KeyValuePair<string, object>> cPairs = new List<KeyValuePair<string, object>>();
 
@@ -337,7 +350,7 @@ namespace CVS_History_Viewer
             {
                 cMatches = new Regex(oPattern.Value).Matches(sText);
 
-                foreach(Match oMatch in cMatches)
+                foreach (Match oMatch in cMatches)
                 {
                     if (oMatch.Groups[1].ToString() != "")
                     {
@@ -370,7 +383,7 @@ namespace CVS_History_Viewer
             string sWhere = "";
             string sLimit = "";
 
-            foreach(KeyValuePair<string, object> oPair in cPairs)
+            foreach (KeyValuePair<string, object> oPair in cPairs)
             {
                 switch (oPair.Key)
                 {
@@ -409,17 +422,17 @@ namespace CVS_History_Viewer
                     case "hash":
                         if (cSubWheres[oPair.Key] != "")
                         {
-                            cSubWheres[oPair.Key] += $" OR {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash")? "%":"")}'";
+                            cSubWheres[oPair.Key] += $" OR {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash") ? "%" : "")}'";
                         }
                         else
                         {
                             cSubWheres[oPair.Key] += $"{oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}{((oPair.Key == "hash") ? "%" : "")}'";
                         }
                         break;
-                }                
+                }
             }
 
-            foreach(KeyValuePair<string, string> oSubWhere in cSubWheres)
+            foreach (KeyValuePair<string, string> oSubWhere in cSubWheres)
             {
                 if (oSubWhere.Value != "")
                 {
@@ -427,11 +440,31 @@ namespace CVS_History_Viewer
                 }
             }
 
-            LoadFromDB(sWhere, sLimit);
+            if (sLimit != "")
+            {
+                LoadFromDB(sWhere, sLimit);
+            }
+            else
+            {
+                LoadFromDB(sWhere);
+            }
 
-            //Create & Show UI Commit list
-            this.uiCommits.ItemsSource = cCommits;
-            this.uiCommits.SelectedIndex = 0;
+            //We do a follow up search, if the search term could be non-key-worded commit hash.
+            if(cCommits.Count == 0 && 
+               !bFolowUpSearch && 
+               !sOriginalText.Trim().Contains(" ") && //Only 1 word
+               sOriginalText.Trim().Length <= 40 && //Maximum length of 40
+               !sOriginalText.Contains(":") && //No ":" in text, as it would be with key-worded searches
+               !sOriginalText.Contains("commit:")) //Not already as a commit hash key-worded before
+            {
+                Search("commit:" + sText, true);
+            }
+            else
+            {
+                //Create & Show UI Commit list
+                this.uiCommits.ItemsSource = cCommits;
+                this.uiCommits.SelectedIndex = 0;
+            }            
         }
 
         private void Commits_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -477,11 +510,18 @@ namespace CVS_History_Viewer
 
                 oItem.Content = $"  {oRevision.oFile.sName } {oRevision.sRevision}";
                 oItem.Tag = oRevision;
+                oItem.ToolTip = oRevision.oFile.sPath + "\\" + oRevision.oFile.sName;
                 
                 this.uiCommitRevisions.Items.Add(oItem);
             }
 
-            this.uiCommitRevisions.SelectedIndex = 0;
+            if (this.PreviousRevisionSelection.ContainsKey(oCommit.sHASH))
+            {
+                this.uiCommitRevisions.SelectedIndex = this.PreviousRevisionSelection[oCommit.sHASH];
+            }else
+            {
+                this.uiCommitRevisions.SelectedIndex = 0;
+            }            
         }
 
         private void SearchText_KeyUp(object sender, KeyEventArgs e)
@@ -494,7 +534,7 @@ namespace CVS_History_Viewer
 
         private void CommitRevisions_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (this.uiCommitRevisions.SelectedItem != null)
+            if (this.uiCommitRevisions.SelectedItem != null && e.OriginalSource.GetType() == typeof(TextBlock))
             {
                 CVSFile oFile = ((Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag).oFile;
                 if(System.IO.File.Exists(oFile.sPath + "\\" + oFile.sName))
@@ -572,6 +612,18 @@ namespace CVS_History_Viewer
                 return;
             }
 
+            Revision oRevision = (Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag;
+            Commit oCommit = (Commit)this.uiCommits.SelectedItem;
+
+            if (this.PreviousRevisionSelection.ContainsKey(oCommit.sHASH))
+            {
+                this.PreviousRevisionSelection[oCommit.sHASH] = this.uiCommitRevisions.SelectedIndex;
+            }
+            else
+            {
+                this.PreviousRevisionSelection.Add(oCommit.sHASH, this.uiCommitRevisions.SelectedIndex);
+            }
+
             this.uiDiffLoading.Visibility = Visibility.Visible;
             oDiffFetchDelay.Stop();
             oDiffFetchDelay.Start();
@@ -614,6 +666,8 @@ namespace CVS_History_Viewer
             //Load Diff Block(s) into view.
             this.uiDiffView.Children.Clear();
 
+            string sFileExtension = Path.GetExtension(oRevision.oFile.sName).Replace(".", "");
+
             int iBlock = 1;
             foreach (DiffBlock oDiffBlock in oRevision.cDiffBlocks)
             {
@@ -655,20 +709,23 @@ namespace CVS_History_Viewer
                         {
                             case "+":
                                 oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFDDFFDD");
-                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')} {oChange.sAction} ";
                                 break;
                             case "-":
                                 oTextBlock.Background = (Brush)new BrushConverter().ConvertFromString("#FFFEE8E9");
-                                oTextBlock.Text = $"{"#".PadLeft(iPadLength, ' ')} {oChange.sAction} {oChange.sLine}";
+                                oTextBlock.Text = $"{"#".PadLeft(iPadLength, ' ')} {oChange.sAction} ";
                                 break;
                             default:
                                 oTextBlock.Background = Brushes.White;
-                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')}   {oChange.sLine}";
+                                oTextBlock.Text = $"{iLine++.ToString().PadLeft(iPadLength, ' ')}   ";
                                 break;
                         }
 
                         oTextBlock.FontFamily = new FontFamily("Consolas");
                         oTextBlock.Foreground = Brushes.Black;
+                        
+                        oTextBlock.Inlines.AddRange(oSyntaxHighlighting.ParseSyntax(oChange.sLine.Replace("\t", oSettings.sTab), sFileExtension));
+
                         oDiffBlock.cDiffLines.Add(oTextBlock);
 
                         this.uiDiffView.Children.Add(oDiffBlock.cDiffLines[oDiffBlock.cDiffLines.Count - 1]);

@@ -8,6 +8,7 @@ namespace CVS_History_Viewer.Resources.Classes
         public int iID { get; set; }
         public string sDescription { get; set; }
         public DateTime dDate { get; set; }
+        public DateTime dLocalDate { get; set; }
         public string sAuthor { get; set; }
         public string sHASH { get; set; }
         public string sShortHASH { get; set; }
