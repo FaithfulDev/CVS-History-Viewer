@@ -1,21 +1,25 @@
 # CVS History Viewer Changelog
 
+# v1.1.1 (Released 2019/10/21)
+### Bugfix
+* (#43) Fixed a crash that would appear when the app tries to merge 2 or more diff blocks.
+
 ## v1.1.0 (Released 2019/10/20)
 ### New Features
 * (#30) Quick Diff View now got syntax highlighting!
 ### Improvements
-* (#27) Tabs are now converted to spaces (default 4). This can be modifed via setting file.
+* (#27) Tabs are now converted to spaces (default 4). This can be modified via setting file.
 * (#31) UI will now restore the previous selected revision when going back to a previous selected commit.
 * (#35) If nothing was found using the search and the search term could be a commit hash without the "commit:" keyword, an automatic follow up search is triggered, treating the search term as a commit hash.
 * (#37) Revision entries (bottom-left list) now show the file path in the tooltip.
 * (#40) Big search performance improvements due to some database optimizations.
 ### Bugfix
 * (#22) Whitespace setting is now read from settings file. At some point in time there will be a way to change it via the UI, but for now you have to change it in the settings file (see local appdata folder).
-* (#23) Search limit is now always applied, not just in the inital load. This should improve search performance on general searches (e.g. no or very few filter) **drastically**!
+* (#23) Search limit is now always applied, not just in the initial load. This should improve search performance on general searches (e.g. no or very few filter) **drastically**!
 * (#28) Commit time is now converted to local time. Before it was shown in UTC, the way CVS logs it.
 * (#29) Fixed a bug that would reverse diff lines whenever 2 blocks are merged.
-* (#38) Double-click in the revison list will now only respond if a revision was targeted. Before it would use whatever revision was previously selected.
-* (#39) Fixed a crash that would happend, whenever trying to refresh from a folder that was deleted.
+* (#38) Double-click in the revision list will now only respond if a revision was targeted. Before it would use whatever revision was previously selected.
+* (#39) Fixed a crash that would happened, whenever trying to refresh from a folder that was deleted.
 
 ## v1.0.2 (Released 2019/05/21)
 ### Improvements
