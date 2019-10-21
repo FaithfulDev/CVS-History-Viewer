@@ -376,7 +376,7 @@ namespace CVS_History_Viewer.Resources.Classes
             {
                 if (bMergeRequired)
                 {
-                    for(int j = oRevision.cDiffBlocks.Count - 1; j >= 0; j--)
+                    for(int j = oRevision.cDiffBlocks[i].cLines.Count - 1; j >= 0; j--)
                     {
                         oMergeInto.cLines.Insert(0, oRevision.cDiffBlocks[i].cLines[j]);
                     }
