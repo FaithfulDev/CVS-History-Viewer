@@ -177,7 +177,7 @@ namespace CVS_History_Viewer
                 bool bFound = false;
                 for(int i = cTempFileList.Count - 1; i >= 0; i--)
                 {
-                    if (cTempFileList[i].sName == oFileInfo.Name && cTempFileList[i].sPath == oFileInfo.DirectoryName)
+                    if (cTempFileList[i].sName.ToLower() == oFileInfo.Name.ToLower() && cTempFileList[i].sPath.ToLower() == oFileInfo.DirectoryName.ToLower())
                     {
                         bFound = true;
 
