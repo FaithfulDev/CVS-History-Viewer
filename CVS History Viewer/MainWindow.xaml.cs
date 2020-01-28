@@ -19,25 +19,24 @@ namespace CVS_History_Viewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string sAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\CVS History Viewer";
-        private string sSyntaxPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "\\Resources\\Syntax";
+        private readonly string sAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\CVS History Viewer";
+        private readonly string sSyntaxPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "\\Resources\\Syntax";
 
-        private Database oDatabase;
-        private Settings oSettings;
-        private BackgroundStuff oBackgroundStuff;
-        private SyntaxHighlighting oSyntaxHighlighting;
+        private readonly Database oDatabase;
+        private readonly Settings oSettings;
+        private readonly BackgroundStuff oBackgroundStuff;
+        private readonly SyntaxHighlighting oSyntaxHighlighting;
 
-        private BackgroundWorker oUpdateCommitsWorker;
+        private readonly BackgroundWorker oUpdateCommitsWorker;
+
+        private readonly Dictionary<string, int> PreviousRevisionSelection = new Dictionary<string, int>();
+
+        private readonly DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
 
         private List<CVSFile> cFiles = new List<CVSFile>();
         private List<Tag> cTags = new List<Tag>();
         private List<CommitTag> cCommitTags = new List<CommitTag>();
         private List<Commit> cCommits = new List<Commit>();
-        private List<Commit> cDummy = new List<Commit>();
-
-        private Dictionary<string, int> PreviousRevisionSelection = new Dictionary<string, int>();
-
-        private DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
 
         private bool bIssueOnLoad = true;
 
@@ -612,7 +611,6 @@ namespace CVS_History_Viewer
                 return;
             }
 
-            Revision oRevision = (Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag;
             Commit oCommit = (Commit)this.uiCommits.SelectedItem;
 
             if (this.PreviousRevisionSelection.ContainsKey(oCommit.sHASH))
