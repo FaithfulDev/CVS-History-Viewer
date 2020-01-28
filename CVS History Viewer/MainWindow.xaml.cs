@@ -486,7 +486,7 @@ namespace CVS_History_Viewer
 
             this.uiCommitHASH.Text = oCommit.sHASH + $" [{oCommit.sShortHASH}]";
             this.uiCommitAuthor.Text = oCommit.sAuthor;
-            this.uiCommitDate.Text = oCommit.dDate.ToLongDateString() + " " + oCommit.dDate.ToLongTimeString();
+            this.uiCommitDate.Text = oCommit.dLocalDate.ToLongDateString() + " " + oCommit.dLocalDate.ToLongTimeString();
             this.uiCommitDescription.Text = oCommit.sDescription;
 
             this.uiCommitRevisions.Items.Clear();
