@@ -1,5 +1,12 @@
 # CVS History Viewer Changelog
 
+# v1.2.0 (Unreleased)
+### New Features
+* (#9) Revision list entries now have a context menu that allows more ways of interacting with the revision.
+### Bugfix
+* (#45) Commit time in revision head area now shows local time instead of UTC.
+* (#47) Changes in file path/name capitalization now no longer causes the file to be added as a new file.
+
 # v1.1.1 (Released 2019/10/21)
 ### Bugfix
 * (#43) Fixed a crash that would appear when the app tries to merge 2 or more diff blocks.
