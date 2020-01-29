@@ -6,6 +6,15 @@
         xmlns:local="clr-namespace:CVS_History_Viewer"
         mc:Ignorable="d"
         Title="CVS History Viewer" Name="MWindow" Height="800" Width="1280" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered" Style="{StaticResource CustomChrome}" WindowStartupLocation="CenterScreen" Icon="Resources/Images/icon.ico">
+
+    <Window.Resources>
+        <ContextMenu x:Key="RevisionContextMenu" x:Shared ="false">
+            <MenuItem Header="Open current Revision" Click="MenuItem_OpenCurrentRevisionClick"/>
+            <MenuItem Header="Open selected Revision" Click="MenuItem_OpenSelectedRevisionClick"/>
+            <MenuItem Header="Show in Explorer" Click="MenuItem_ShowInExplorerClick"/>            
+        </ContextMenu>
+    </Window.Resources>
+    
     <Grid SnapsToDevicePixels="True">
 
         <Grid.RowDefinitions>

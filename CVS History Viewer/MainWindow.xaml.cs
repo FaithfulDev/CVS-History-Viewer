@@ -510,7 +510,9 @@ namespace CVS_History_Viewer
                 oItem.Content = $"  {oRevision.oFile.sName } {oRevision.sRevision}";
                 oItem.Tag = oRevision;
                 oItem.ToolTip = oRevision.oFile.sPath + "\\" + oRevision.oFile.sName;
-                
+                oItem.ContextMenu = (ContextMenu)FindResource("RevisionContextMenu");
+                oItem.ContextMenu.Tag = oRevision;
+
                 this.uiCommitRevisions.Items.Add(oItem);
             }
 
@@ -739,6 +741,30 @@ namespace CVS_History_Viewer
             }
 
             this.uiDiffLoading.Visibility = Visibility.Collapsed;
+        }
+
+        private void MenuItem_ShowInExplorerClick(object sender, RoutedEventArgs e)
+        {
+            CVSFile oFile = ((Revision)((ContextMenu)((MenuItem)sender).Parent).Tag).oFile;
+            if (System.IO.File.Exists(oFile.sPath + "\\" + oFile.sName))
+            {
+                System.Diagnostics.Process.Start("explorer.exe", $"/select, \"{oFile.sPath}\\{oFile.sName}\"");
+            }            
+        }
+
+        private void MenuItem_OpenCurrentRevisionClick(object sender, RoutedEventArgs e)
+        {
+            CVSFile oFile = ((Revision)((ContextMenu)((MenuItem)sender).Parent).Tag).oFile;
+            if (System.IO.File.Exists(oFile.sPath + "\\" + oFile.sName))
+            {
+                System.Diagnostics.Process.Start(oFile.sPath + "\\" + oFile.sName);
+            }
+        }
+
+        private void MenuItem_OpenSelectedRevisionClick(object sender, RoutedEventArgs e)
+        {
+            string newFile = CVSCalls.OutputRevisionToFile((Revision)((ContextMenu)((MenuItem)sender).Parent).Tag);
+            System.Diagnostics.Process.Start(newFile);
         }
     }
 

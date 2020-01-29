@@ -505,5 +505,32 @@ namespace CVS_History_Viewer.Resources.Classes
 
             return oDiffBlock;
         }
+
+        /// <summary>
+        /// Outputs the given Revision to a randomly generated temp file and returns the full path to this file.
+        /// </summary>
+        /// <param name="oRevision">Revision to be outputted</param>
+        /// <returns>Full path to the newly created file</returns>
+        public static string OutputRevisionToFile(Revision oRevision)
+        {
+            string randomFile = Path.GetTempFileName();
+            string targetExtension = Path.GetExtension(oRevision.oFile.sName);
+
+            File.Move(randomFile, randomFile += targetExtension);
+
+
+            if (oRevision.sState != "dead")
+            {
+                CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
+            }
+            else
+            {
+                int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
+                string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
+                CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
+            }
+
+            return randomFile;
+        }
     }
 }
