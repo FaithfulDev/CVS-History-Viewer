@@ -20,8 +20,8 @@ namespace CVS_History_Viewer.Resources.Classes
 
             System.Diagnostics.Process oProcess = new System.Diagnostics.Process();
 
-            oProcess.StartInfo.FileName = "cmd.exe";
-            oProcess.StartInfo.Arguments = "/C " + sCommand;
+            oProcess.StartInfo.FileName = "cvs.exe";
+            oProcess.StartInfo.Arguments = sCommand;
             oProcess.StartInfo.UseShellExecute = false;
             oProcess.StartInfo.RedirectStandardOutput = true;
             oProcess.StartInfo.WorkingDirectory = sPath;
@@ -62,7 +62,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 return cCommits;
             }
 
-            List<string> cLines = CVSCalls.RunCommand(oFile.sPath, $"cvs log \"{oFile.sName}\"");            
+            List<string> cLines = CVSCalls.RunCommand(oFile.sPath, $"log \"{oFile.sName}\"");            
 
             //If output is just 5 line, it probably means the file is not known in cvs (yet) or some other error.
             if (cLines.Count <= 5)
@@ -310,8 +310,8 @@ namespace CVS_History_Viewer.Resources.Classes
             int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
             string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
             
-            List<string> cWhitespace = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
-            List<string> cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs diff -r {oRevision.sRevision} -r {sPrevRevision} \"{oRevision.oFile.sName}\"");
+            List<string> cWhitespace = CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
+            List<string> cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"diff -r {oRevision.sRevision} -r {sPrevRevision} \"{oRevision.oFile.sName}\"");
 
             DiffBlock oDiffBlock = new DiffBlock();
             string sBlockKind = "";
@@ -423,13 +423,13 @@ namespace CVS_History_Viewer.Resources.Classes
 
             if (oRevision.sState != "dead")
             {
-                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
+                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
             }
             else
             {
                 int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
                 string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
-                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
+                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
             }            
 
             DiffBlock oDiffBlock = new DiffBlock();
@@ -521,13 +521,13 @@ namespace CVS_History_Viewer.Resources.Classes
 
             if (oRevision.sState != "dead")
             {
-                CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
+                CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
             }
             else
             {
                 int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
                 string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
-                CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
+                CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
             }
 
             return randomFile;
