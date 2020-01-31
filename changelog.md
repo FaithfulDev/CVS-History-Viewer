@@ -4,6 +4,7 @@
 ### New Features
 * (#9) Revision list entries now have a context menu that allows more ways of interacting with the revision.
 ### Bugfix
+* (#42) Fixed issue that prevented correct scans when using a directory referenced by UNC-paths.
 * (#45) Commit time in revision head area now shows local time instead of UTC.
 * (#47) Changes in file path/name capitalization now no longer causes the file to be added as a new file.
 
