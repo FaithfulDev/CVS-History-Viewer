@@ -68,7 +68,7 @@ namespace CVS_History_Viewer
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Application.Current.Shutdown();
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
@@ -765,6 +765,11 @@ namespace CVS_History_Viewer
         {
             string newFile = CVSCalls.OutputRevisionToFile((Revision)((ContextMenu)((MenuItem)sender).Parent).Tag);
             System.Diagnostics.Process.Start(newFile);
+        }
+
+        private void uiOpenSettings_Click(object sender, RoutedEventArgs e)
+        {
+            new SettingsUI(oSettings).ShowDialog();
         }
     }
 
