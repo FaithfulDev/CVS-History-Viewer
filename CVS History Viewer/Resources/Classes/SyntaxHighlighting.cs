@@ -11,7 +11,7 @@ namespace CVS_History_Viewer.Resources.Classes
 {
     public class SyntaxHighlighting
     {
-        private List<Syntax> cSyntax = new List<Syntax>();
+        private readonly List<Syntax> cSyntax = new List<Syntax>();
 
         public SyntaxHighlighting(string sPath)
         {
@@ -118,15 +118,15 @@ namespace CVS_History_Viewer.Resources.Classes
 
     public class Syntax
     {
-        public string lang;
-        public string[] extensions;
-        public Syntax.Scopes[] scopes;
+        public string lang { get; set; }
+        public string[] extensions { get; set; }
+        public Syntax.Scopes[] scopes { get; set; }
 
         public class Scopes
         {
-            public string name;
-            public string color;
-            public string[] patterns;
+            public string name { get; set; }
+            public string color { get; set; }
+            public string[] patterns { get; set; }
         }
     }
 }

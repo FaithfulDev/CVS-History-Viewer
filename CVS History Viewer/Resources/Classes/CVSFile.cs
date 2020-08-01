@@ -4,13 +4,13 @@ namespace CVS_History_Viewer.Resources.Classes
 {
     public class CVSFile
     {
-        public int iID;
-        public string sName;
-        public string sPath;
-        public DateTime dLastUpdated;
-        public bool bDeleted = false;
-        public string sCVSPath;
-        public bool bIgnored = false;
+        public int iID { get; set; }
+        public string sName { get; set; }
+        public string sPath { get; set; }
+        public DateTime dLastUpdated { get; set; }
+        public bool bDeleted { get; set; }  = false;
+        public string sCVSPath { get; set; }
+        public bool bIgnored { get; set; }= false;
 
         public CVSFile()
         {
