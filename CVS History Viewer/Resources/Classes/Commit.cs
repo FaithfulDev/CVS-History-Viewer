@@ -13,6 +13,6 @@ namespace CVS_History_Viewer.Resources.Classes
         public string sHASH { get; set; }
         public string sShortHASH { get; set; }
         public string sDescriptionTable { get; set; }
-        public List<Revision> cRevisions = new List<Revision>();
+        public List<Revision> cRevisions { get; set; } = new List<Revision>();
     }
 }

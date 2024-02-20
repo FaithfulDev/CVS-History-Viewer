@@ -1,16 +1,33 @@
 ﻿
+using System.Text;
+
 namespace CVS_History_Viewer.Resources.Classes
 {
-    class Settings
+    public class Settings
     {
-        private JSONParser.JSONParser oJSONParser = new JSONParser.JSONParser();
-        private string sUserSettingsFilePath = "";
+        private readonly JSONParser.JSONParser oJSONParser = new JSONParser.JSONParser();
+        private readonly string sUserSettingsFilePath;
 
         //Setting Variables
-        public string sRootDirectory = null;
-        public int iWhitespace = 3;
-        public int iTabSpaces = 4;
-        public string sTab = null;
+        public string sRootDirectory { get; set; } = null;
+        public int iWhitespace { get; set; } = 3;
+        private int _iTabSpaces = 4;
+        public int iTabSpaces
+        {
+            get { return _iTabSpaces; }
+            set
+            {
+                _iTabSpaces = value;
+                StringBuilder tabBuilder = new StringBuilder(); 
+                for (int i = 1; i <= iTabSpaces; i++)
+                {
+                    tabBuilder.Append(" ");
+                }
+
+                sTab = tabBuilder.ToString();
+            }
+        }
+        public string sTab { get; set; } = null;
 
         public Settings(string sSettingsFilePath)
         {
@@ -28,11 +45,6 @@ namespace CVS_History_Viewer.Resources.Classes
             sRootDirectory = (string)oJSONParser.GetValue("RootDirectory", null);
             iWhitespace = (int)oJSONParser.GetValue("Whitespace", iWhitespace);
             iTabSpaces = (int)oJSONParser.GetValue("TabSpaces", iTabSpaces);
-
-            for(int i = 1; i <= iTabSpaces; i++)
-            {
-                sTab += " ";
-            }
         }
 
         public void SaveSettings()

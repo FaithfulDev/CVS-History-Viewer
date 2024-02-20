@@ -20,12 +20,12 @@ namespace CVS_History_Viewer.Resources.Classes
 
             System.Diagnostics.Process oProcess = new System.Diagnostics.Process();
 
-            oProcess.StartInfo.FileName = "cmd.exe";
-            oProcess.StartInfo.Arguments = "/C " + sCommand;
+            oProcess.StartInfo.FileName = "powershell.exe";
+            oProcess.StartInfo.Arguments = "/C cvs " + sCommand;
             oProcess.StartInfo.UseShellExecute = false;
             oProcess.StartInfo.RedirectStandardOutput = true;
             oProcess.StartInfo.WorkingDirectory = sPath;
-            oProcess.StartInfo.CreateNoWindow = true; //hide console window
+            oProcess.StartInfo.CreateNoWindow = true;
             oProcess.Start();
 
             string sOutput = oProcess.StandardOutput.ReadToEnd();
@@ -62,7 +62,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 return cCommits;
             }
 
-            List<string> cLines = CVSCalls.RunCommand(oFile.sPath, $"cvs log \"{oFile.sName}\"");            
+            List<string> cLines = CVSCalls.RunCommand(oFile.sPath, $"log \"{oFile.sName}\"");            
 
             //If output is just 5 line, it probably means the file is not known in cvs (yet) or some other error.
             if (cLines.Count <= 5)
@@ -74,13 +74,10 @@ namespace CVS_History_Viewer.Resources.Classes
             int iLine = 0;
             List<KeyValuePair<string, string>> cRawTags = new List<KeyValuePair<string, string>>();
             string sRCS = null;
-            if (oFile.iID == 0)
+            if (oFile.iID == 0 && cLines[1].Contains("RCS file:"))
             {
-                if (cLines[1].Contains("RCS file:"))
-                {
-                    sRCS = cLines[1].Replace("RCS file: ", "").Replace("/" + oFile.sName + ",v", "");                    
-                }
-            }           
+                sRCS = cLines[1].Replace("RCS file: ", "").Replace("/" + oFile.sName + ",v", "");
+            }  
 
             //Find begin of symbolic names.
             for (int i = iLine; i < cLines.Count; i++)
@@ -124,20 +121,18 @@ namespace CVS_History_Viewer.Resources.Classes
             //Process commits
             for (int i = iLine; i < cLines.Count; i++)
             {
-                Commit oCommit = new Commit();
-                Revision oRevision = new Revision();
+                Commit oCommit = new Commit
+                {
+                    dDate = GlobalFunctions.ParseDateTime(new Regex("date: (.*?);").Match(cLines[i + 2]).Groups[1].ToString()),
+                    sAuthor = new Regex("author: (.*?);").Match(cLines[i + 2]).Groups[1].ToString()
+                };
 
-                oRevision.sRevision = cLines[i + 1].Replace("revision ", "");
-
-                Match oMatch;
-
-                oMatch = new Regex("date: (.*?);").Match(cLines[i + 2]);
-
-                oCommit.dDate = GlobalFunctions.ParseDateTime(oMatch.Groups[1].ToString());
-
-                oCommit.sAuthor = new Regex("author: (.*?);").Match(cLines[i + 2]).Groups[1].ToString();
-                oRevision.sState = new Regex("state: (.*?);").Match(cLines[i + 2]).Groups[1].ToString();
-                oRevision.sLinesChanged = new Regex("lines: (.*)").Match(cLines[i + 2]).Groups[1].ToString();
+                Revision oRevision = new Revision
+                {
+                    sRevision = cLines[i + 1].Replace("revision ", ""),
+                    sState = new Regex("state: (.*?);").Match(cLines[i + 2]).Groups[1].ToString(),
+                    sLinesChanged = new Regex("lines: (.*)").Match(cLines[i + 2]).Groups[1].ToString()
+                };
 
                 int iDescriptionStart = 3;
 
@@ -149,6 +144,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 oCommit.sDescription = cLines[i + iDescriptionStart];
 
                 //Collect additional description lines
+                StringBuilder oAdditionalDescriptionLines = new StringBuilder();
                 for (int j = i + iDescriptionStart + 1; j < cLines.Count; j++)
                 {
                     if (cLines[j] == "----------------------------" ||
@@ -159,10 +155,11 @@ namespace CVS_History_Viewer.Resources.Classes
                     }
                     else
                     {
-                        oCommit.sDescription += Environment.NewLine + cLines[j];
+                        oAdditionalDescriptionLines.Append(Environment.NewLine + cLines[j]);
                     }
                 }
 
+                oCommit.sDescription = oAdditionalDescriptionLines.ToString();
                 oCommit.sDescription = oCommit.sDescription.Trim();
 
                 //Tags
@@ -209,12 +206,9 @@ namespace CVS_History_Viewer.Resources.Classes
                 oRevision.oFile = oFile;
 
                 //Check if this file was re-added to the repository.
-                if (cCommits.Count > 0 && !oRevision.bReAdded)
+                if (cCommits.Count > 0 && oRevision.sState == "dead")
                 {
-                    if (cCommits[cCommits.Count - 1].cRevisions[0].sState != "dead" && oRevision.sState == "dead")
-                    {
-                        cCommits[cCommits.Count - 1].cRevisions[0].bReAdded = true;
-                    }
+                    cCommits[cCommits.Count - 1].cRevisions[0].bReAdded = true;
                 }
 
                 //Finally
@@ -256,7 +250,7 @@ namespace CVS_History_Viewer.Resources.Classes
 
                 List<string> cSplitFile = new List<string>(oFile.sPath.Split('\\'));
 
-                int iCount = 0;
+                int iCount;
                 if (cSplitRCS.Count < cSplitFile.Count)
                 {
                     iCount = cSplitRCS.Count;
@@ -282,10 +276,12 @@ namespace CVS_History_Viewer.Resources.Classes
                     }
                 }
 
+                StringBuilder oCVSPathBuilder = new StringBuilder();
                 for (int g = cMatches.Count - 1; g >= 0; g--)
                 {
-                    oFile.sCVSPath += cMatches[g] + ((g != 0) ? "/" : "");
+                    oCVSPathBuilder.Append(cMatches[g] + ((g != 0) ? "/" : ""));
                 }
+                oFile.sCVSPath = oCVSPathBuilder.ToString();
             }
 
             return cCommits;
@@ -310,8 +306,8 @@ namespace CVS_History_Viewer.Resources.Classes
             int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
             string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
             
-            List<string> cWhitespace = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
-            List<string> cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs diff -r {oRevision.sRevision} -r {sPrevRevision} \"{oRevision.oFile.sName}\"");
+            List<string> cWhitespace = CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
+            List<string> cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"diff -r {oRevision.sRevision} -r {sPrevRevision} \"{oRevision.oFile.sName}\"");
 
             DiffBlock oDiffBlock = new DiffBlock();
             string sBlockKind = "";
@@ -359,9 +355,11 @@ namespace CVS_History_Viewer.Resources.Classes
                         oDiffBlock.sBlockKind = sBlockKind;
                         oRevision.cDiffBlocks.Add(oDiffBlock);
                     }
-                    oDiffBlock = new DiffBlock();
-                    oDiffBlock.iStartLine = int.Parse(oMatch.Groups[1].Value);
-                    oDiffBlock.iEndLine = int.Parse((!string.IsNullOrWhiteSpace(oMatch.Groups[2].Value))? oMatch.Groups[2].Value : oMatch.Groups[1].Value);
+                    oDiffBlock = new DiffBlock
+                    {
+                        iStartLine = int.Parse(oMatch.Groups[1].Value),
+                        iEndLine = int.Parse((!string.IsNullOrWhiteSpace(oMatch.Groups[2].Value)) ? oMatch.Groups[2].Value : oMatch.Groups[1].Value)
+                    };
                     sBlockKind = oMatch.Groups[3].Value;
                 }
             }
@@ -387,29 +385,29 @@ namespace CVS_History_Viewer.Resources.Classes
                 else
                 {
                     //No merge means that the block needs bottom whitespace.
-                    oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, (oRevision.cDiffBlocks[i].sBlockKind == "a") ? true : false, 2);
+                    oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, WhitespaceMode.bottom);
                 }
 
-                if(i - 1 >= 0)
+                if (i - 1 >= 0)
                 {
                     int iDiff = oRevision.cDiffBlocks[i].iStartLine - oRevision.cDiffBlocks[i - 1].iEndLine - 1;
                     if(iDiff < iWhitespace * 2)
                     {
                         bMergeRequired = true;
                         oMergeInto = oRevision.cDiffBlocks[i];
-                        oMergeInto = AddWhitespace(oMergeInto, cWhitespace, iDiff, (oMergeInto.sBlockKind == "a") ? true : false, 1);
+                        oMergeInto = AddWhitespace(oMergeInto, cWhitespace, iDiff, WhitespaceMode.top);
                     }
                     else
                     {
                         //it seems that the next block is far enough to treat them separately. Add max top whitespace.
                         bMergeRequired = false;
-                        oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, (oRevision.cDiffBlocks[i].sBlockKind == "a") ? true : false, 1);
+                        oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, WhitespaceMode.top);
                     }
                 }
                 else
                 {
                     //This is the top-most block in the list, so we need to add max top whitespace.
-                    oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, (oRevision.cDiffBlocks[i].sBlockKind == "a") ? true : false, 1);
+                    oRevision.cDiffBlocks[i] = AddWhitespace(oRevision.cDiffBlocks[i], cWhitespace, iWhitespace, WhitespaceMode.top);
                     break;
                 }
             }
@@ -417,25 +415,31 @@ namespace CVS_History_Viewer.Resources.Classes
             return oRevision;
         }
 
+        private static bool IsDeletion(string sBlockKind)
+        {
+            return sBlockKind == "a";
+        }
+
         private static Revision GetBaseVersion(Revision oRevision)
         {
-            List<string> cLines = new List<string>();
+            List<string> cLines;
 
             if (oRevision.sState != "dead")
             {
-                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
+                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
             }
             else
             {
                 int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
                 string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
-                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"cvs co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
-            }            
+                cLines = CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\"");
+            }
 
-            DiffBlock oDiffBlock = new DiffBlock();
-
-            oDiffBlock.iStartLine = (cLines.Count == 0) ? 0 : 1;
-            oDiffBlock.iEndLine = cLines.Count;
+            DiffBlock oDiffBlock = new DiffBlock
+            {
+                iStartLine = (cLines.Count == 0) ? 0 : 1,
+                iEndLine = cLines.Count
+            };
 
             List<DiffBlock.LineChange> cChanges = new List<DiffBlock.LineChange>();
             for(int i = 0; i < cLines.Count; i++)
@@ -455,14 +459,12 @@ namespace CVS_History_Viewer.Resources.Classes
             return oRevision;
         }
 
-        private static DiffBlock AddWhitespace(DiffBlock oDiffBlock, List<string> cWhitespace, int iWhitespace, bool bDeletion = false, int iMode = 3)
+        private static DiffBlock AddWhitespace(DiffBlock oDiffBlock, List<string> cWhitespace, int iWhitespace, WhitespaceMode iMode)
         {
-            //iMode 1 = Only Top
-            //iMode 2 = Only Bottom
-            //iMode 3 = Both
-
-            if(iMode == 1 || iMode == 3)
+            if(iMode == WhitespaceMode.top)
             {
+                bool bDeletion = IsDeletion(oDiffBlock.sBlockKind);
+
                 //Top Whitespace
                 int iNewLine = oDiffBlock.iStartLine;
                 //When it's a deletion, then the "Startline" is the first line that we need as whitespace, where in any other case we would go for the line above that.
@@ -483,7 +485,7 @@ namespace CVS_History_Viewer.Resources.Classes
                 oDiffBlock.iStartLine = iNewLine;
             }
 
-            if (iMode == 2 || iMode == 3)
+            if (iMode == WhitespaceMode.bottom)
             {
                 //Bottom Whitespace
                 int iNewLine = oDiffBlock.iEndLine;
@@ -504,6 +506,39 @@ namespace CVS_History_Viewer.Resources.Classes
             }               
 
             return oDiffBlock;
+        }
+
+        /// <summary>
+        /// Outputs the given Revision to a randomly generated temp file and returns the full path to this file.
+        /// </summary>
+        /// <param name="oRevision">Revision to be outputted</param>
+        /// <returns>Full path to the newly created file</returns>
+        public static string OutputRevisionToFile(Revision oRevision)
+        {
+            string randomFile = Path.GetTempFileName();
+            string targetExtension = Path.GetExtension(oRevision.oFile.sName);
+
+            File.Move(randomFile, randomFile + targetExtension);
+            randomFile += targetExtension;
+
+            if (oRevision.sState != "dead")
+            {
+                CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {oRevision.sRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
+            }
+            else
+            {
+                int iPrevRevision = int.Parse(oRevision.sRevision.Substring(oRevision.sRevision.LastIndexOf('.') + 1)) - 1;
+                string sPrevRevision = oRevision.sRevision.Substring(0, oRevision.sRevision.LastIndexOf('.') + 1) + iPrevRevision.ToString();
+                CVSCalls.RunCommand(oRevision.oFile.sPath, $"co -r {sPrevRevision} -p \"{oRevision.oFile.sCVSPath}/{oRevision.oFile.sName}\" >> \"{randomFile}\"");
+            }
+
+            return randomFile;
+        }
+
+        private enum WhitespaceMode
+        {
+            top,
+            bottom
         }
     }
 }

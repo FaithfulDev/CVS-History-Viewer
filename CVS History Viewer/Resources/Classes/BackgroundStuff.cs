@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CVS_History_Viewer.Resources.Classes
 {
     class BackgroundStuff
     {
-        private Database oDatabase;
-        private List<BackgroundWorker> cDiffWorkers = new List<BackgroundWorker>();
+        private readonly Database oDatabase;
+        private readonly List<BackgroundWorker> cDiffWorkers = new List<BackgroundWorker>();
 
         public delegate void DiffCompleted(object sender, DiffCompletedEventArgs e);
         public event DiffCompleted OnDiffCompleted;

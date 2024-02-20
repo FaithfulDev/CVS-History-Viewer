@@ -6,6 +6,15 @@
         xmlns:local="clr-namespace:CVS_History_Viewer"
         mc:Ignorable="d"
         Title="CVS History Viewer" Name="MWindow" Height="800" Width="1280" Loaded="Window_Loaded" ContentRendered="Window_ContentRendered" Style="{StaticResource CustomChrome}" WindowStartupLocation="CenterScreen" Icon="Resources/Images/icon.ico">
+
+    <Window.Resources>
+        <ContextMenu x:Key="RevisionContextMenu" x:Shared ="false">
+            <MenuItem Header="Open current Revision" Click="MenuItem_OpenCurrentRevisionClick"/>
+            <MenuItem Header="Open selected Revision" Click="MenuItem_OpenSelectedRevisionClick"/>
+            <MenuItem Header="Show in Explorer" Click="MenuItem_ShowInExplorerClick"/>            
+        </ContextMenu>
+    </Window.Resources>
+    
     <Grid SnapsToDevicePixels="True">
 
         <Grid.RowDefinitions>
@@ -21,6 +30,7 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Button Name="uiShowAbout" Content="?" FontWeight="Bold" Click="ShowAbout_Click"  Height="20" Width="20" WindowChrome.IsHitTestVisibleInChrome="True" Style="{StaticResource Button}"/>
                 <Button Name="uiMinimize" Content="&#xf2d1;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Minimize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20" Style="{StaticResource Button}"/>
+                <Button Name="uiOpenSettings" Content="&#xf013;" FontFamily="{StaticResource FontAwesomeSolid}" Click="uiOpenSettings_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20" Style="{StaticResource Button}"/>
                 <Button Name="uiMaximize" Content="&#xf2d0;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Maximize_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource Button}">

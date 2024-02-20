@@ -1,0 +1,38 @@
+﻿<Window x:Class="CVS_History_Viewer.Resources.Windows.SettingsUI"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CVS_History_Viewer.Resources.Windows"
+        mc:Ignorable="d"
+        Title="CVS History Viewer Settings" WindowStartupLocation="CenterScreen" Height="227" Width="240" Style="{StaticResource CustomChromeSub}" Icon="/CVS History Viewer;component/Resources/Images/Icon.ico" ResizeMode="NoResize">
+    <Grid SnapsToDevicePixels="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Background="#c5013c">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Name="uiClose" Content="&#xf410;" FontFamily="{StaticResource FontAwesomeRegular}" Click="Close_Click" WindowChrome.IsHitTestVisibleInChrome="True" Height="20" Width="20" Style="{StaticResource Button}"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <DockPanel Margin="5">
+
+                <UniformGrid Columns="2" VerticalAlignment="Top">
+                    <Label Content="Whitespace" Margin="0,0,0,5"/>
+                    <TextBox Name="uiWhitespace" Margin="0,0,0,5" Height="20" Width="25" HorizontalAlignment="Left" TextAlignment="Center" TextChanged="uiWhitespace_TextChanged"/>
+
+                    <Label Content="Tab space*" Margin="0,0,0,5"/>
+                    <TextBox Name="uiTabspace" Margin="0,0,0,5" Height="20" Width="25" HorizontalAlignment="Left" TextAlignment="Center" TextChanged="uiTabspace_TextChanged"/>
+                </UniformGrid>
+                
+            </DockPanel>
+
+            <Label Content="*Applied after restart" VerticalAlignment="Bottom" FontSize="10"/>
+        </Grid>
+
+    </Grid>
+</Window>

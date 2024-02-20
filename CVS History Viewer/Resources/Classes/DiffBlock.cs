@@ -5,16 +5,16 @@ namespace CVS_History_Viewer.Resources.Classes
 {
     public class DiffBlock
     {
-        public int iStartLine = 0;
-        public int iEndLine = 0;
-        public string sBlockKind = "";
-        public List<LineChange> cLines = new List<LineChange>();
-        public List<TextBlock> cDiffLines = new List<TextBlock>();
+        public int iStartLine { get; set; } = 0;
+        public int iEndLine { get; set; } = 0;
+        public string sBlockKind { get; set; } = "";
+        public List<LineChange> cLines { get; set; } = new List<LineChange>();
+        public List<TextBlock> cDiffLines { get; set; } = new List<TextBlock>();
 
         public class LineChange
         {
-            public string sAction;
-            public string sLine;
+            public string sAction { get; set; }
+            public string sLine { get; set; }
         }        
     }
 }

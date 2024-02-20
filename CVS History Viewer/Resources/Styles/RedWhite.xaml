@@ -9,6 +9,7 @@
     <SolidColorBrush x:Key="Red" Color="#c5013c"/>
     <SolidColorBrush x:Key="LightRed" Color="#FFBD627D"/>
     <Color x:Key="LightRedColor">#FFBD627D</Color>
+    <Color x:Key="DropShadowColor">#000000</Color>
 
     <Style x:Key="RevisionNewFile" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource FontAwesomeRegular}"/>
@@ -50,6 +51,46 @@
                         <TextBlock Name="Title" Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Title}"   
                                VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White"  
                                Margin="60,2,0,0"/>
+                        <!--<Image Name="Icon" Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Icon}"  
+                           VerticalAlignment="Top" HorizontalAlignment="Left"  
+                           Margin="2,3,0,0"   
+                           Width="15"  
+                           shell:WindowChrome.IsHitTestVisibleInChrome="True"/>-->
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="WindowState" Value="Maximized">
+                            <Setter TargetName="OuterBorder" Property="BorderThickness" Value="6"/>
+                            <Setter TargetName="Title" Property="Margin" Value="66,8,0,0"/>
+                            <!--<Setter TargetName="Icon" Property="Margin" Value="9,10,0,0"/>-->
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+    ####################################
+    Sub-Window
+    ####################################
+    -->
+
+    <Style x:Key="CustomChromeSub" TargetType="{x:Type Window}">
+        <Setter Property="shell:WindowChrome.WindowChrome">
+            <Setter.Value>
+                <shell:WindowChrome GlassFrameThickness="1" CornerRadius="0" CaptionHeight="20"/>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type Window}">
+                    <Grid SnapsToDevicePixels="True">
+                        <Border Name="OuterBorder" Background="White" Margin="0" BorderThickness="1" BorderBrush="Black">
+                            <ContentPresenter Content="{TemplateBinding Content}" />
+                        </Border>
+                        <TextBlock Name="Title" Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Title}"   
+                               VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White"  
+                               Margin="5,2,0,0"/>
                         <!--<Image Name="Icon" Source="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Icon}"  
                            VerticalAlignment="Top" HorizontalAlignment="Left"  
                            Margin="2,3,0,0"   
@@ -560,6 +601,73 @@
                             BorderBrush="White" Background="{DynamicResource LightRed}" SnapsToDevicePixels="True">
                         <ContentPresenter Margin="4" HorizontalAlignment="Left" VerticalAlignment="Top" />
                     </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+    ####################################
+    Menu (all parts)
+    ####################################
+    -->
+
+    <Style TargetType="ContextMenu">
+        <Setter Property="Background" Value="{StaticResource Red}"/>
+        <Setter Property="BorderThickness" Value="1,1,2,1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Red}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" Margin="3">
+                        <ItemsPresenter/>
+                        <Border.Effect>
+                            <DropShadowEffect Color="{StaticResource DropShadowColor}" Opacity="0.60" ShadowDepth="3"/>
+                        </Border.Effect>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="MenuItem">
+        <Setter Property="Background" Value="{StaticResource Red}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border Background="{TemplateBinding Background}" BorderThickness="0">
+                        <ContentPresenter Margin="6,3,6,3" ContentSource="Header" RecognizesAccessKey="True"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsHighlighted" Value="true">
+                            <Setter Property="Background" Value="{StaticResource LightRed}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="FontWeight" Value="Bold"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Separator" x:Key="{x:Static MenuItem.SeparatorStyleKey}">
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderBrush" Value="White"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+        <Setter Property="Focusable" Value="false"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border 
+                        BorderBrush="{TemplateBinding BorderBrush}" 
+                        BorderThickness="{TemplateBinding BorderThickness}" 
+                        Background="{TemplateBinding Background}" 
+                        Height="1" 
+                        SnapsToDevicePixels="true"/>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

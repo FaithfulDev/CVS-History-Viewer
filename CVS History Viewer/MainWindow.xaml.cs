@@ -11,6 +11,7 @@ using CVS_History_Viewer.Resources.Windows;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Text;
 
 namespace CVS_History_Viewer
 {
@@ -19,25 +20,26 @@ namespace CVS_History_Viewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string sAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\CVS History Viewer";
-        private string sSyntaxPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "\\Resources\\Syntax";
+        private readonly string sAppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\CVS History Viewer";
+        private readonly string sSyntaxPath = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "\\Resources\\Syntax";
 
-        private Database oDatabase;
-        private Settings oSettings;
-        private BackgroundStuff oBackgroundStuff;
-        private SyntaxHighlighting oSyntaxHighlighting;
+        private readonly Database oDatabase;
+        private readonly Settings oSettings;
+        private readonly BackgroundStuff oBackgroundStuff;
+        private readonly SyntaxHighlighting oSyntaxHighlighting;
 
-        private BackgroundWorker oUpdateCommitsWorker;
+        private readonly BackgroundWorker oUpdateCommitsWorker;
+
+        private readonly Dictionary<string, int> PreviousRevisionSelection = new Dictionary<string, int>();
+
+        private readonly DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
 
         private List<CVSFile> cFiles = new List<CVSFile>();
         private List<Tag> cTags = new List<Tag>();
         private List<CommitTag> cCommitTags = new List<CommitTag>();
         private List<Commit> cCommits = new List<Commit>();
-        private List<Commit> cDummy = new List<Commit>();
 
-        private Dictionary<string, int> PreviousRevisionSelection = new Dictionary<string, int>();
-
-        private DispatcherTimer oDiffFetchDelay = new DispatcherTimer();
+        private readonly char sPathSeparator = Path.DirectorySeparatorChar;
 
         private bool bIssueOnLoad = true;
 
@@ -69,7 +71,7 @@ namespace CVS_History_Viewer
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Application.Current.Shutdown();
         }
 
         private void Minimize_Click(object sender, RoutedEventArgs e)
@@ -177,7 +179,7 @@ namespace CVS_History_Viewer
                 bool bFound = false;
                 for(int i = cTempFileList.Count - 1; i >= 0; i--)
                 {
-                    if (cTempFileList[i].sName == oFileInfo.Name && cTempFileList[i].sPath == oFileInfo.DirectoryName)
+                    if (cTempFileList[i].sName.ToLower() == oFileInfo.Name.ToLower() && cTempFileList[i].sPath.ToLower() == oFileInfo.DirectoryName.ToLower())
                     {
                         bFound = true;
 
@@ -212,19 +214,16 @@ namespace CVS_History_Viewer
             //Look for newly deleted files (files known to the DB, not already marked as deleted, but not findable in the directory)
             foreach (CVSFile oFile in cTempFileList)
             {
-                if (!oFile.bDeleted)
+                if (IsNewlyDeletedFile(oFile))
                 {
-                    if (!File.Exists(oFile.sPath + "\\" + oFile.sName))
-                    {
-                        //For future checks the file will be marked as deleted...
-                        oFile.bDeleted = true;
-                        //...but it does get one last check.
-                        cOutDatedFiles.Add(oFile);
-                        oProgress.iTotal = cOutDatedFiles.Count;
-                        oUpdateCommitsWorker.ReportProgress(0, oProgress);
-                    }
+                    //For future checks the file will be marked as deleted...
+                    oFile.bDeleted = true;
+                    //...but it does get one last check.
+                    cOutDatedFiles.Add(oFile);
+                    oProgress.iTotal = cOutDatedFiles.Count;
+                    oUpdateCommitsWorker.ReportProgress(0, oProgress);
                 }
-            }            
+            }
 
             oProgress.iTotal = cOutDatedFiles.Count;
 
@@ -240,6 +239,11 @@ namespace CVS_History_Viewer
                 oProgress.iDone += 1;
                 oUpdateCommitsWorker.ReportProgress(0, oProgress);
             }                    
+        }
+
+        private bool IsNewlyDeletedFile(CVSFile oFile)
+        {
+            return !oFile.bDeleted && !File.Exists(oFile.sPath + sPathSeparator + oFile.sName);
         }
 
         private void UpdateCommits_BackgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -380,24 +384,25 @@ namespace CVS_History_Viewer
                 cPairs.Add(new KeyValuePair<string, object>("description", "%" + sText.Trim(' ') + "%"));
             }
 
-            string sWhere = "";
+            string sWhere;
             string sLimit = "";
+            StringBuilder oWhereBuilder = new StringBuilder();
 
             foreach (KeyValuePair<string, object> oPair in cPairs)
             {
                 switch (oPair.Key)
                 {
                     case "date":
-                        sWhere += $" AND strftime('%Y-%m-%d', date) = '{((DateTime)oPair.Value).ToString("yyyy-MM-dd")}'";
+                        oWhereBuilder.Append($" AND strftime('%Y-%m-%d', date) = '{(DateTime)oPair.Value:yyyy-MM-dd}'");
                         break;
                     case "from":
-                        sWhere += $" AND strftime('%Y-%m-%d', date) >= '{((DateTime)oPair.Value).ToString("yyyy-MM-dd")}'";
+                        oWhereBuilder.Append($" AND strftime('%Y-%m-%d', date) >= '{(DateTime)oPair.Value:yyyy-MM-dd}'");
                         break;
                     case "to":
-                        sWhere += $" AND strftime('%Y-%m-%d', date) <= '{((DateTime)oPair.Value).ToString("yyyy-MM-dd")}'";
+                        oWhereBuilder.Append($" AND strftime('%Y-%m-%d', date) <= '{(DateTime)oPair.Value:yyyy-MM-dd}'");
                         break;
                     case "description":
-                        sWhere += $" AND {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}'";
+                        oWhereBuilder.Append($" AND {oPair.Key} LIKE '{oPair.Value.ToString().Replace("'", @"''")}'");
                         break;
                     case "limit":
                         sLimit = " LIMIT " + oPair.Value;
@@ -436,9 +441,10 @@ namespace CVS_History_Viewer
             {
                 if (oSubWhere.Value != "")
                 {
-                    sWhere += " AND (" + oSubWhere.Value + ")";
+                    oWhereBuilder.Append(" AND (" + oSubWhere.Value + ")");
                 }
             }
+            sWhere = oWhereBuilder.ToString();
 
             if (sLimit != "")
             {
@@ -486,7 +492,7 @@ namespace CVS_History_Viewer
 
             this.uiCommitHASH.Text = oCommit.sHASH + $" [{oCommit.sShortHASH}]";
             this.uiCommitAuthor.Text = oCommit.sAuthor;
-            this.uiCommitDate.Text = oCommit.dDate.ToLongDateString() + " " + oCommit.dDate.ToLongTimeString();
+            this.uiCommitDate.Text = oCommit.dLocalDate.ToLongDateString() + " " + oCommit.dLocalDate.ToLongTimeString();
             this.uiCommitDescription.Text = oCommit.sDescription;
 
             this.uiCommitRevisions.Items.Clear();
@@ -511,7 +517,9 @@ namespace CVS_History_Viewer
                 oItem.Content = $"  {oRevision.oFile.sName } {oRevision.sRevision}";
                 oItem.Tag = oRevision;
                 oItem.ToolTip = oRevision.oFile.sPath + "\\" + oRevision.oFile.sName;
-                
+                oItem.ContextMenu = (ContextMenu)FindResource("RevisionContextMenu");
+                oItem.ContextMenu.Tag = oRevision;
+
                 this.uiCommitRevisions.Items.Add(oItem);
             }
 
@@ -537,9 +545,9 @@ namespace CVS_History_Viewer
             if (this.uiCommitRevisions.SelectedItem != null && e.OriginalSource.GetType() == typeof(TextBlock))
             {
                 CVSFile oFile = ((Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag).oFile;
-                if(System.IO.File.Exists(oFile.sPath + "\\" + oFile.sName))
+                if(System.IO.File.Exists(oFile.sPath + sPathSeparator + oFile.sName))
                 {
-                    System.Diagnostics.Process.Start(oFile.sPath + "\\" + oFile.sName);
+                    System.Diagnostics.Process.Start(oFile.sPath + sPathSeparator + oFile.sName);
                 }                
             }
         }
@@ -612,7 +620,6 @@ namespace CVS_History_Viewer
                 return;
             }
 
-            Revision oRevision = (Revision)((ListBoxItem)this.uiCommitRevisions.SelectedItem).Tag;
             Commit oCommit = (Commit)this.uiCommits.SelectedItem;
 
             if (this.PreviousRevisionSelection.ContainsKey(oCommit.sHASH))
@@ -741,6 +748,35 @@ namespace CVS_History_Viewer
             }
 
             this.uiDiffLoading.Visibility = Visibility.Collapsed;
+        }
+
+        private void MenuItem_ShowInExplorerClick(object sender, RoutedEventArgs e)
+        {
+            CVSFile oFile = ((Revision)((ContextMenu)((MenuItem)sender).Parent).Tag).oFile;
+            if (System.IO.File.Exists(oFile.sPath + sPathSeparator + oFile.sName))
+            {
+                System.Diagnostics.Process.Start("explorer.exe", $"/select, \"{oFile.sPath}\\{oFile.sName}\"");
+            }            
+        }
+
+        private void MenuItem_OpenCurrentRevisionClick(object sender, RoutedEventArgs e)
+        {
+            CVSFile oFile = ((Revision)((ContextMenu)((MenuItem)sender).Parent).Tag).oFile;
+            if (System.IO.File.Exists(oFile.sPath + sPathSeparator + oFile.sName))
+            {
+                System.Diagnostics.Process.Start(oFile.sPath + sPathSeparator + oFile.sName);
+            }
+        }
+
+        private void MenuItem_OpenSelectedRevisionClick(object sender, RoutedEventArgs e)
+        {
+            string newFile = CVSCalls.OutputRevisionToFile((Revision)((ContextMenu)((MenuItem)sender).Parent).Tag);
+            System.Diagnostics.Process.Start(newFile);
+        }
+
+        private void uiOpenSettings_Click(object sender, RoutedEventArgs e)
+        {
+            new SettingsUI(oSettings).ShowDialog();
         }
     }
 
