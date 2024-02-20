@@ -1,6 +1,6 @@
 # CVS History Viewer Changelog
 
-# v1.2.0 (Unreleased)
+# v1.2.0 (Released 2024/02/20)
 ### New Features
 * (#9) Revision list entries now have a context menu that allows more ways of interacting with the revision.
 * (#48) Added Settings window.
